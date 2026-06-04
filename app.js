@@ -423,6 +423,65 @@ function computeMetrics(model) {
     else fullCount++;
   }
 
+  // Cancel ratio by discount population: full-price vs paid-discount vs free ($0).
+  // A subscriber is "free" if any charge was $0, else "discounted" if they ever used a
+  // code, else "full". Lets us compare retention across how they were acquired.
+  const churnBuckets = {
+    full: { total: 0, cancelled: 0 },
+    discounted: { total: 0, cancelled: 0 },
+    free: { total: 0, cancelled: 0 },
+  };
+  for (const list of byEmail.values()) {
+    const last = list[list.length - 1];
+    if (!last.recurrence) continue;
+    const isFree = list.some((r) => r.salePrice === 0);
+    const usedCode = list.some((r) => r.discountCode);
+    const bucket = isFree ? "free" : usedCode ? "discounted" : "full";
+    churnBuckets[bucket].total++;
+    if (last.cancellation || (last.subEnd && last.subEnd < TODAY)) churnBuckets[bucket].cancelled++;
+  }
+  const discountChurn = Object.fromEntries(
+    Object.entries(churnBuckets).map(([k, v]) => [k, {
+      ...v,
+      ratio: v.total ? (v.cancelled / v.total) * 100 : null,
+    }])
+  );
+
+  // Discount ROI (rough estimate). Item Price ($) is unreliable, so the "full" price for a
+  // tier+billing period is estimated as the most common Sale Price among non-discounted
+  // charges of that kind. Discount given = full − paid; ROI = net collected per $1 given.
+  const fullPriceVotes = new Map(); // "tier|recurrence" -> Map(price -> count)
+  for (const r of rows) {
+    if (r.discountCode || r.salePrice <= 0 || !r.recurrence) continue;
+    const key = `${r.tier}|${r.recurrence}`;
+    const votes = fullPriceVotes.get(key) || new Map();
+    votes.set(r.salePrice, (votes.get(r.salePrice) || 0) + 1);
+    fullPriceVotes.set(key, votes);
+  }
+  const fullPriceByKey = new Map();
+  for (const [key, votes] of fullPriceVotes) {
+    let best = 0, bestN = -1;
+    for (const [price, n] of votes) if (n > bestN) { best = price; bestN = n; }
+    fullPriceByKey.set(key, best);
+  }
+  let discountGiven = 0, discountedNet = 0, foregoneFree = 0;
+  for (const r of rows) {
+    if (!r.recurrence) continue;
+    const full = fullPriceByKey.get(`${r.tier}|${r.recurrence}`) || 0;
+    if (r.salePrice === 0 && (r.discountCode || full > 0)) {
+      foregoneFree += full;
+    } else if (r.discountCode && r.salePrice > 0) {
+      discountedNet += r.net;
+      if (full > r.salePrice) discountGiven += full - r.salePrice;
+    }
+  }
+  const discountRoi = {
+    discountGiven,
+    discountedNet,
+    foregoneFree,
+    roi: discountGiven > 0 ? discountedNet / discountGiven : null,
+  };
+
   // Forecast chart window: previous 4 months + current month + next 7 months = 12.
   // Past/current actuals come from received revenue; current-remaining + future
   // come from projected renewals (generated strictly after today, so no overlap).
@@ -461,6 +520,7 @@ function computeMetrics(model) {
     refunds, tierChanges,
     survivalSeries,
     cumulativeRevSeries,
+    discountChurn, discountRoi,
     discounts: { freeCount, discountedCount, fullCount, codeCounts, totalCodes: codeCounts.length, discountedCustomers },
   };
 }
@@ -928,6 +988,24 @@ function render(M) {
       plugins: { legend: { position: "right", labels: { font: baseFont, color: C.black } } },
     },
   }));
+
+  /* Cancel rate by discount */
+  const DC = M.discountChurn;
+  const pct = (v) => (v == null ? "–" : `${v.toFixed(1)}%`);
+  document.getElementById("discountChurnCards").innerHTML = [
+    card("Full price", pct(DC.full.ratio), `${fmtInt(DC.full.cancelled)} of ${fmtInt(DC.full.total)} cancelled`, true),
+    card("Paid discount", pct(DC.discounted.ratio), `${fmtInt(DC.discounted.cancelled)} of ${fmtInt(DC.discounted.total)} cancelled`),
+    card("Free ($0)", pct(DC.free.ratio), `${fmtInt(DC.free.cancelled)} of ${fmtInt(DC.free.total)} cancelled`),
+  ].join("");
+
+  /* Discount ROI (estimate) */
+  const RO = M.discountRoi;
+  document.getElementById("discountRoiCards").innerHTML = [
+    card("Est. discount given", fmtMoney(RO.discountGiven), "to paying customers", true),
+    card("Net from discounted", fmtMoney(RO.discountedNet), "paid-discount charges"),
+    card("Return on discount", RO.roi == null ? "–" : `${RO.roi.toFixed(1)}×`, "net collected per $1 given"),
+    card("Foregone (free)", fmtMoney(RO.foregoneFree), "est. full price of $0 charges"),
+  ].join("");
 }
 
 function chartOpts(fmt) {

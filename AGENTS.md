@@ -140,6 +140,12 @@ Key rules — keep these consistent if you touch them:
 - **Subscriber retention** — monthly discrete Kaplan-Meier survival curve over 24 months;
   subscribers still active (or not yet old enough) are right-censored at their account age, so
   the curve is monotonic non-increasing.
+- **Cancel rate by discount** — share of subscribers who have cancelled, bucketed into full
+  price / paid discount / free ($0). `ratio` is `null` for an empty bucket.
+- **Discount ROI (estimate)** — full price per `tier|recurrence` is the mode Sale Price among
+  non-discounted charges (Item Price is unreliable); estimated discount given = full − paid,
+  ROI = net collected from paid-discount charges per $1 given, plus foregone revenue on $0
+  charges. Clearly badged as an estimate.
 
 ## Verifying changes (no test framework)
 
