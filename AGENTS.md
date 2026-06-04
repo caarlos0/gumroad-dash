@@ -6,10 +6,10 @@
 
 ## What this is
 
-A **static, backend-free** webpage that loads a Gumroad **sales CSV export** and shows
-revenue statistics. The headline feature is **forecasting income** (weekly/monthly) from
-currently-active subscriptions. Everything runs in the browser; no data ever leaves the
-machine and there is no server-side code.
+**The Missing Gumroad Dashboard** — a **static, backend-free** webpage that loads a Gumroad
+**sales CSV export** and shows revenue statistics. The headline feature is **forecasting
+income** (weekly/monthly) from currently-active subscriptions. Everything runs in the browser;
+no data ever leaves the machine and there is no server-side code.
 
 Styling deliberately mimics Gumroad: pink (`#ff90e8`) accent, cream background, hard black
 borders with offset box-shadows.
