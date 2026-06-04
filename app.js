@@ -92,6 +92,7 @@ function buildModel(rawRows) {
       chargeback: r["Disputed?"] === "1" && r["Dispute Won?"] !== "1",
       discountCode: (r["Discount Code"] || "").trim(),
       salePrice: parseFloat(r["Sale Price ($)"]) || 0,
+      country: (r["Country"] || "").trim() || "(Unknown)",
     }))
     .filter((r) => r.date && !r.fullyRefunded && !r.chargeback);
 
@@ -224,6 +225,19 @@ function computeMetrics(model) {
   for (const r of rows) bump(revByMonth, monthKey(r.date), r.net);
   const revSeries = months.map((mo) => revByMonth.get(mo.key) || 0);
 
+  /* --- Geography: customers & net revenue by country --- */
+  // Customer's country = their first charge's country (unique email attribution);
+  // revenue summed across all that customer's charges.
+  const geoMap = new Map();
+  for (const list of byEmail.values()) {
+    const country = list[0].country;
+    const net = list.reduce((a, r) => a + r.net, 0);
+    const g = geoMap.get(country) || { country, customers: 0, revenue: 0 };
+    g.customers++; g.revenue += net;
+    geoMap.set(country, g);
+  }
+  const geography = [...geoMap.values()].sort((a, b) => b.customers - a.customers).slice(0, 10);
+
   /* --- New vs returning revenue per month --- */
   // A charge is "new" if it's that customer's first-ever charge, else "returning"
   // (renewals and repeat purchases). Splits each month's net into acquisition vs base.
@@ -321,6 +335,7 @@ function computeMetrics(model) {
     mrrLabels: mrrMonths.map((mo) => mo.key),
     mrrSeries, revSeries, newSeries, cancelSeries,
     arpuSeries, newRevSeries, returningRevSeries,
+    geography,
     cumulativeRevSeries,
     discounts: { freeCount, discountedCount, fullCount, codeCounts, totalCodes: codeCounts.length, discountedCustomers },
   };
@@ -496,6 +511,40 @@ function render(M) {
       responsive: true,
       maintainAspectRatio: false,
       plugins: { legend: { position: "right", labels: { font: baseFont, color: C.black } } },
+    },
+  }));
+
+  /* Top countries by customers */
+  charts.push(new Chart(document.getElementById("geoChart"), {
+    type: "bar",
+    data: {
+      labels: M.geography.map((g) => g.country),
+      datasets: [{
+        label: "Customers",
+        data: M.geography.map((g) => g.customers),
+        backgroundColor: C.pink,
+        borderColor: C.black,
+        borderWidth: 1,
+      }],
+    },
+    options: {
+      ...chartOpts((v) => fmtInt(v)),
+      indexAxis: "y",
+      scales: {
+        x: { beginAtZero: true, ...gridOpts, ticks: { ...gridOpts.ticks, callback: (v) => fmtInt(v) } },
+        y: gridOpts,
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const g = M.geography[ctx.dataIndex];
+              return `${fmtInt(g.customers)} customers · ${fmtMoney(g.revenue)} net`;
+            },
+          },
+        },
+      },
     },
   }));
 
