@@ -533,6 +533,7 @@ function destroyCharts() { charts.forEach((c) => c.destroy()); charts = []; }
 
 const baseFont = { family: "ABeeZee, sans-serif" };
 const gridOpts = { grid: { color: C.grid }, ticks: { font: baseFont, color: C.black } };
+const stackedScales = () => ({ x: { stacked: true, ...gridOpts }, y: { stacked: true, ...gridOpts } });
 
 /* Chart colors follow the OS light/dark preference (mirrors the CSS theme). */
 function applyChartTheme() {
@@ -674,7 +675,7 @@ function render(M) {
     },
     options: {
       ...chartOpts((v) => Math.abs(v)),
-      scales: { x: { stacked: true, ...gridOpts }, y: { stacked: true, ...gridOpts } },
+      scales: stackedScales(),
     },
   }));
 
@@ -744,7 +745,7 @@ function render(M) {
     },
     options: {
       ...chartOpts((v) => fmtMoney(v)),
-      scales: { x: { stacked: true, ...gridOpts }, y: { stacked: true, ...gridOpts } },
+      scales: stackedScales(),
     },
   }));
 
@@ -781,7 +782,7 @@ function render(M) {
     },
     options: {
       ...chartOpts((v) => fmtMoney(v)),
-      scales: { x: { stacked: true, ...gridOpts }, y: { stacked: true, ...gridOpts } },
+      scales: stackedScales(),
     },
   }));
 
