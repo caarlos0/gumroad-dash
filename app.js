@@ -224,6 +224,19 @@ function computeMetrics(model) {
   for (const r of rows) bump(revByMonth, monthKey(r.date), r.net);
   const revSeries = months.map((mo) => revByMonth.get(mo.key) || 0);
 
+  /* --- New vs returning revenue per month --- */
+  // A charge is "new" if it's that customer's first-ever charge, else "returning"
+  // (renewals and repeat purchases). Splits each month's net into acquisition vs base.
+  const newRevByMonth = new Map();
+  const returningRevByMonth = new Map();
+  for (const list of byEmail.values()) {
+    list.forEach((r, i) => {
+      bump(i === 0 ? newRevByMonth : returningRevByMonth, monthKey(r.date), r.net);
+    });
+  }
+  const newRevSeries = months.map((mo) => newRevByMonth.get(mo.key) || 0);
+  const returningRevSeries = months.map((mo) => returningRevByMonth.get(mo.key) || 0);
+
   /* --- Cumulative net revenue (running total by month) --- */
   let runningTotal = 0;
   const cumulativeRevSeries = revSeries.map((v) => (runningTotal += v));
@@ -307,7 +320,7 @@ function computeMetrics(model) {
     monthLabels: months.map((mo) => mo.key),
     mrrLabels: mrrMonths.map((mo) => mo.key),
     mrrSeries, revSeries, newSeries, cancelSeries,
-    arpuSeries,
+    arpuSeries, newRevSeries, returningRevSeries,
     cumulativeRevSeries,
     discounts: { freeCount, discountedCount, fullCount, codeCounts, totalCodes: codeCounts.length, discountedCustomers },
   };
@@ -483,6 +496,22 @@ function render(M) {
       responsive: true,
       maintainAspectRatio: false,
       plugins: { legend: { position: "right", labels: { font: baseFont, color: C.black } } },
+    },
+  }));
+
+  /* New vs. returning revenue */
+  charts.push(new Chart(document.getElementById("newReturningChart"), {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        { label: "New", data: M.newRevSeries, backgroundColor: C.green, borderColor: C.black, borderWidth: 1, stack: "s" },
+        { label: "Returning", data: M.returningRevSeries, backgroundColor: C.purple, borderColor: C.black, borderWidth: 1, stack: "s" },
+      ],
+    },
+    options: {
+      ...chartOpts((v) => fmtMoney(v)),
+      scales: { x: { stacked: true, ...gridOpts }, y: { stacked: true, ...gridOpts } },
     },
   }));
 

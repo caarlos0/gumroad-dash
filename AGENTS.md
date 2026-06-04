@@ -118,6 +118,8 @@ Key rules — keep these consistent if you touch them:
   `(today, today+30d]`; count, expected $, and a list. Excludes past-due/stale.
 - **ARPU over time** — at each completed month end, committed MRR / count of committed subs
   (via the shared `committedSubAt` snapshot helper); `count === 0` months render as 0.
+- **New vs. returning revenue** — each month's net split by whether a charge is the customer's
+  first-ever (`list[0]`) or a repeat; the two series sum to `revSeries`.
 
 ## Verifying changes (no test framework)
 
