@@ -240,6 +240,33 @@ function computeMetrics(model) {
   const mrrSeries = committedMonths.map((c) => c.total);
   const arpuSeries = committedMonths.map((c) => (c.count ? c.total / c.count : 0));
 
+  /* --- MRR movement (month-over-month waterfall) --- */
+  // Between consecutive completed month ends, classify each subscriber's committed
+  // monthly value: new, churned, expansion (tier/price up), contraction (down).
+  // Aligned to mrrMonths starting at index 1 (the first month has no prior to compare).
+  const moveLabels = mrrMonths.slice(1).map((mo) => mo.key);
+  const moveNew = [], moveExpansion = [], moveChurned = [], moveContraction = [];
+  for (let i = 1; i < mrrMonths.length; i++) {
+    const prevEnd = mrrMonths[i - 1].end, curEnd = mrrMonths[i].end;
+    let nw = 0, exp = 0, churn = 0, contr = 0;
+    for (const list of byEmail.values()) {
+      const p = committedSubAt(list, prevEnd);
+      const c = committedSubAt(list, curEnd);
+      const pv = p ? monthlyValue(p) : 0;
+      const cv = c ? monthlyValue(c) : 0;
+      if (!p && c) nw += cv;
+      else if (p && !c) churn += pv;
+      else if (p && c) {
+        if (cv > pv) exp += cv - pv;
+        else if (cv < pv) contr += pv - cv;
+      }
+    }
+    moveNew.push(nw);
+    moveExpansion.push(exp);
+    moveChurned.push(-churn);
+    moveContraction.push(-contr);
+  }
+
   /* --- Actual net revenue per month --- */
   const revByMonth = new Map();
   for (const r of rows) bump(revByMonth, monthKey(r.date), r.net);
@@ -356,6 +383,7 @@ function computeMetrics(model) {
     mrrSeries, revSeries, newSeries, cancelSeries,
     arpuSeries, newRevSeries, returningRevSeries,
     geography, ltv,
+    moveLabels, moveNew, moveExpansion, moveChurned, moveContraction,
     cumulativeRevSeries,
     discounts: { freeCount, discountedCount, fullCount, codeCounts, totalCodes: codeCounts.length, discountedCustomers },
   };
@@ -601,6 +629,24 @@ function render(M) {
       }],
     },
     options: chartOpts((v) => fmtMoney2(v)),
+  }));
+
+  /* MRR movement (stacked: positives up, negatives down) */
+  charts.push(new Chart(document.getElementById("mrrMovementChart"), {
+    type: "bar",
+    data: {
+      labels: M.moveLabels.map(monthLabel),
+      datasets: [
+        { label: "New", data: M.moveNew, backgroundColor: C.green, borderColor: C.black, borderWidth: 1, stack: "s" },
+        { label: "Expansion", data: M.moveExpansion, backgroundColor: C.purple, borderColor: C.black, borderWidth: 1, stack: "s" },
+        { label: "Contraction", data: M.moveContraction, backgroundColor: C.orange, borderColor: C.black, borderWidth: 1, stack: "s" },
+        { label: "Churn", data: M.moveChurned, backgroundColor: C.red, borderColor: C.black, borderWidth: 1, stack: "s" },
+      ],
+    },
+    options: {
+      ...chartOpts((v) => fmtMoney(v)),
+      scales: { x: { stacked: true, ...gridOpts }, y: { stacked: true, ...gridOpts } },
+    },
   }));
 
   /* Cumulative net revenue */

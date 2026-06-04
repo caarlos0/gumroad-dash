@@ -125,6 +125,9 @@ Key rules — keep these consistent if you touch them:
 - **Customer lifetime & LTV** — all-time avg revenue per customer; plus, for already-churned
   (cancelled) subscribers, count, avg lifespan in months (first charge → cancellation), and avg
   lifetime revenue. Churned-only stats are labelled as such; guards for zero churned.
+- **MRR movement** — month-over-month committed-MRR change via `committedSubAt` at consecutive
+  completed month ends, split into new / expansion / contraction / churn. The four series sum to
+  `mrrSeries[i] − mrrSeries[i-1]` exactly; aligned to `mrrMonths` from index 1.
 
 ## Verifying changes (no test framework)
 
