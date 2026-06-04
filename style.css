@@ -33,7 +33,7 @@ html, body {
   background: var(--white);
   border-bottom: var(--border);
 }
-.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; color: inherit; text-decoration: none; }
 .brand-mark { font-size: 22px; }
 .topbar-actions { display: flex; align-items: center; gap: 14px; }
 .data-asof {
