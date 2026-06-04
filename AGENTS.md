@@ -52,7 +52,8 @@ Opening `index.html` over `file://` also works after `pnpm install` (paths are r
   `Net Total ($)` (amount received after fees), `Recurrence` (`monthly`|`yearly`),
   `Variants` (tier, e.g. `(Business)`), `Recurring Charge?` (`1` for renewals, `0` first),
   `Cancellation Date`, `Subscription End Date`, `Fully Refunded?`, `Partial Refund ($)`,
-  `Disputed?`, `Dispute Won?`.
+  `Disputed?`, `Dispute Won?`, `Sale Price ($)` (per-charge price after discount; `0` for
+  100%-off), `Discount Code` (empty when none).
 - **No subscription-ID column exists.** Subscriptions are grouped by **email**
   (lowercased). `Order Number` changes per charge, so it can't be used. When a sub is
   cancelled, Gumroad stamps `Cancellation Date` + `Subscription End Date` on **all** its rows.
@@ -82,6 +83,12 @@ Key rules — keep these consistent if you touch them:
   charge still covers that month AND it isn't cancelled by then. The **current (open) month
   is excluded** from this chart to avoid a misleading dip from not-yet-charged renewals.
 - Month arithmetic uses a **clamped `addMonths`** (Jan 31 + 1mo → Feb 28/29, not Mar 3).
+- **Discount metrics** use **access-based active** subs (latest charge per email, not cancelled,
+  not ended) with **no staleness filter** — because 100%-off (free) subs generate **no $0
+  renewal charges**, so the revenue staleness guard would wrongly hide them. Buckets:
+  *free* = `Sale Price ($)` is 0; *discounted* = sale price > 0 with a `Discount Code`;
+  *full* = sale price > 0 with no code. Also: customers-per-code (unique emails, all time) and
+  total distinct codes / discounted customers. Surfaced in the **Discounts** panel.
 - Header pill shows `"<filename> - <latest purchase date>"`. Header controls are hidden until
   data is loaded.
 
@@ -113,7 +120,9 @@ Always verify against **both** `sales_data.csv` (real) and `fake_sales_data.csv`
 ## Demo data generator
 
 `fake_sales_data.csv` is generated (seeded, ~190 subscribers / ~1500 rows) to exercise every
-feature: growth over time, monthly/yearly, all tiers, cancellations, stale subs, refunds.
+feature: growth over time, monthly/yearly, all tiers, cancellations, stale subs, refunds, and
+**discount codes** (a pool of 100%-off "free" codes and partial-percent codes; free subs record
+only the initial charge, mirroring real Gumroad behavior).
 The generator script is not kept in-repo; regenerate via a throwaway script that writes all
 header columns with `csv.DictWriter` if you need to refresh it (then convert CRLF→LF).
 

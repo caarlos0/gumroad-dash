@@ -66,6 +66,8 @@ function buildModel(rawRows) {
       subEnd: parseDay(r["Subscription End Date"]),
       fullyRefunded: r["Fully Refunded?"] === "1",
       chargeback: r["Disputed?"] === "1" && r["Dispute Won?"] !== "1",
+      discountCode: (r["Discount Code"] || "").trim(),
+      salePrice: parseFloat(r["Sale Price ($)"]) || 0,
     }))
     .filter((r) => r.date && !r.fullyRefunded && !r.chargeback);
 
@@ -197,6 +199,32 @@ function computeMetrics(model) {
   const newSeries = months.map((mo) => newByMonth.get(mo.key) || 0);
   const cancelSeries = months.map((mo) => -(cancelByMonth.get(mo.key) || 0));
 
+  /* --- Discounts --- */
+  // Unique customers per discount code (all time).
+  const codeCustomers = new Map();
+  for (const r of rows) {
+    if (!r.discountCode) continue;
+    if (!codeCustomers.has(r.discountCode)) codeCustomers.set(r.discountCode, new Set());
+    codeCustomers.get(r.discountCode).add(r.email);
+  }
+  const codeCounts = [...codeCustomers.entries()]
+    .map(([code, set]) => ({ code, count: set.size }))
+    .sort((a, b) => b.count - a.count);
+  const discountedCustomers = new Set([].concat(...[...codeCustomers.values()].map((s) => [...s]))).size;
+
+  // Price breakdown over subscriptions with active access (not cancelled, not ended).
+  // Note: free (100%-off) subs don't generate $0 renewals, so the revenue staleness
+  // guard is intentionally NOT applied here — we want everyone who still has access.
+  let freeCount = 0, discountedCount = 0, fullCount = 0;
+  for (const list of byEmail.values()) {
+    const last = list[list.length - 1];
+    if (!last.recurrence) continue;
+    if (last.cancellation || (last.subEnd && last.subEnd < TODAY)) continue;
+    if (last.salePrice === 0) freeCount++;
+    else if (last.discountCode) discountedCount++;
+    else fullCount++;
+  }
+
   // Forecast chart window: previous 4 months + current month + next 7 months = 12.
   // Past/current actuals come from received revenue; current-remaining + future
   // come from projected renewals (generated strictly after today, so no overlap).
@@ -226,6 +254,7 @@ function computeMetrics(model) {
     monthLabels: months.map((mo) => mo.key),
     mrrLabels: mrrMonths.map((mo) => mo.key),
     mrrSeries, revSeries, newSeries, cancelSeries,
+    discounts: { freeCount, discountedCount, fullCount, codeCounts, totalCodes: codeCounts.length, discountedCustomers },
   };
 }
 
@@ -378,6 +407,63 @@ function render(M) {
       datasets: [{
         data: tierLabels.map((t) => M.tierCounts[t]),
         backgroundColor: [C.pink, C.purple, C.green, C.orange, C.red],
+        borderColor: C.black,
+        borderWidth: 1,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: "right", labels: { font: baseFont, color: C.black } } },
+    },
+  }));
+
+  /* Discount cards */
+  const D = M.discounts;
+  document.getElementById("discountCards").innerHTML = [
+    card("Free via discount", fmtInt(D.freeCount), "active subs paying $0", true),
+    card("Discounted (paying)", fmtInt(D.discountedCount), "active subs with a code"),
+    card("Full price", fmtInt(D.fullCount), "active subs, no discount"),
+    card("Discount codes used", fmtInt(D.totalCodes), `${fmtInt(D.discountedCustomers)} customers total`),
+  ].join("");
+
+  /* Customers per discount code (top 12, horizontal bars) */
+  const topCodes = D.codeCounts.slice(0, 12);
+  charts.push(new Chart(document.getElementById("discountCodeChart"), {
+    type: "bar",
+    data: {
+      labels: topCodes.map((c) => c.code),
+      datasets: [{
+        label: "Customers",
+        data: topCodes.map((c) => c.count),
+        backgroundColor: C.pink,
+        borderColor: C.black,
+        borderWidth: 1,
+      }],
+    },
+    options: {
+      indexAxis: "y",
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (ctx) => `${fmtInt(ctx.parsed.x)} customers` } },
+      },
+      scales: {
+        x: { beginAtZero: true, ...gridOpts, ticks: { ...gridOpts.ticks, precision: 0 } },
+        y: gridOpts,
+      },
+    },
+  }));
+
+  /* Subscriptions by price (doughnut) */
+  charts.push(new Chart(document.getElementById("priceTypeChart"), {
+    type: "doughnut",
+    data: {
+      labels: ["Full price", "Discounted", "Free"],
+      datasets: [{
+        data: [D.fullCount, D.discountedCount, D.freeCount],
+        backgroundColor: [C.purple, C.orange, C.pink],
         borderColor: C.black,
         borderWidth: 1,
       }],
