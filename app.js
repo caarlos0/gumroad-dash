@@ -184,6 +184,10 @@ function computeMetrics(model) {
   for (const r of rows) bump(revByMonth, monthKey(r.date), r.net);
   const revSeries = months.map((mo) => revByMonth.get(mo.key) || 0);
 
+  /* --- Cumulative net revenue (running total by month) --- */
+  let runningTotal = 0;
+  const cumulativeRevSeries = revSeries.map((v) => (runningTotal += v));
+
   /* --- New vs cancelled per month --- */
   const newByMonth = new Map();
   for (const list of byEmail.values()) {
@@ -261,6 +265,7 @@ function computeMetrics(model) {
     monthLabels: months.map((mo) => mo.key),
     mrrLabels: mrrMonths.map((mo) => mo.key),
     mrrSeries, revSeries, newSeries, cancelSeries,
+    cumulativeRevSeries,
     discounts: { freeCount, discountedCount, fullCount, codeCounts, totalCodes: codeCounts.length, discountedCustomers },
   };
 }
@@ -436,6 +441,25 @@ function render(M) {
       maintainAspectRatio: false,
       plugins: { legend: { position: "right", labels: { font: baseFont, color: C.black } } },
     },
+  }));
+
+  /* Cumulative net revenue */
+  charts.push(new Chart(document.getElementById("cumulativeChart"), {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: "Cumulative net",
+        data: M.cumulativeRevSeries,
+        borderColor: C.black,
+        backgroundColor: "rgba(35,160,148,0.30)",
+        fill: true,
+        tension: 0.25,
+        pointRadius: 0,
+        borderWidth: 2,
+      }],
+    },
+    options: chartOpts((v) => fmtMoney(v)),
   }));
 
   /* Discount cards */

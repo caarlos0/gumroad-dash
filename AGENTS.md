@@ -108,6 +108,11 @@ Key rules — keep these consistent if you touch them:
 - Header pill shows `"<filename> - <latest purchase date>"`. Header controls are hidden until
   data is loaded.
 
+### Additional analytics metrics
+
+- **Cumulative net revenue** — running total of `revSeries` over `months`; final value equals
+  `lifetimeNet`.
+
 ## Verifying changes (no test framework)
 
 There is no automated test suite. Verify manually:
