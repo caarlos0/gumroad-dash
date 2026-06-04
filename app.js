@@ -115,6 +115,16 @@ function computeMetrics(model) {
   const tierCounts = {};
   for (const r of active) tierCounts[r.tier] = (tierCounts[r.tier] || 0) + 1;
 
+  /* --- MRR split by recurrence and by tier (dollars, active subs) --- */
+  const mrrByRecurrence = { monthly: 0, yearly: 0 };
+  const mrrByTier = {};
+  for (const r of active) {
+    const v = monthlyValue(r);
+    if (r.recurrence === "yearly") mrrByRecurrence.yearly += v;
+    else mrrByRecurrence.monthly += v;
+    mrrByTier[r.tier] = (mrrByTier[r.tier] || 0) + v;
+  }
+
   const lifetimeNet = rows.reduce((s, r) => s + r.net, 0);
   const totalCustomers = byEmail.size;
 
@@ -258,6 +268,7 @@ function computeMetrics(model) {
     latestDate: maxDate,
     avgPerSub: active.length ? mrr / active.length : 0,
     tierCounts,
+    mrrByRecurrence, mrrByTier,
     forecast: {
       next7, next30, next90, next12mo,
       months: fMonths, actual: forecastActual, projected: forecastProjected, currentIdx,
@@ -460,6 +471,54 @@ function render(M) {
       }],
     },
     options: chartOpts((v) => fmtMoney(v)),
+  }));
+
+  /* MRR by billing period (doughnut) */
+  charts.push(new Chart(document.getElementById("recurrenceMrrChart"), {
+    type: "doughnut",
+    data: {
+      labels: ["Monthly", "Yearly"],
+      datasets: [{
+        data: [M.mrrByRecurrence.monthly, M.mrrByRecurrence.yearly],
+        backgroundColor: [C.pink, C.purple],
+        borderColor: C.black,
+        borderWidth: 1,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: "right", labels: { font: baseFont, color: C.black } },
+        tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${fmtMoney2(ctx.parsed)}` } },
+      },
+    },
+  }));
+
+  /* MRR by plan (horizontal bars) */
+  const mrrTierLabels = Object.keys(M.mrrByTier);
+  charts.push(new Chart(document.getElementById("tierMrrChart"), {
+    type: "bar",
+    data: {
+      labels: mrrTierLabels,
+      datasets: [{
+        label: "MRR",
+        data: mrrTierLabels.map((t) => M.mrrByTier[t]),
+        backgroundColor: C.purple,
+        borderColor: C.black,
+        borderWidth: 1,
+      }],
+    },
+    options: {
+      indexAxis: "y",
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (ctx) => fmtMoney2(ctx.parsed.x) } },
+      },
+      scales: { x: { beginAtZero: true, ...gridOpts, ticks: { ...gridOpts.ticks, callback: (v) => fmtMoney(v) } }, y: gridOpts },
+    },
   }));
 
   /* Discount cards */

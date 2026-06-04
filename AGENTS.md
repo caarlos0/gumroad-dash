@@ -112,6 +112,8 @@ Key rules — keep these consistent if you touch them:
 
 - **Cumulative net revenue** — running total of `revSeries` over `months`; final value equals
   `lifetimeNet`.
+- **MRR by recurrence / by tier** — active subs' `monthlyValue` summed by `recurrence`
+  (monthly vs yearly) and by `tier`; each split sums to total MRR.
 
 ## Verifying changes (no test framework)
 
