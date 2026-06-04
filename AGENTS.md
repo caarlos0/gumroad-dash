@@ -116,6 +116,8 @@ Key rules — keep these consistent if you touch them:
   (monthly vs yearly) and by `tier`; each split sums to total MRR.
 - **Renewals due soon** — active subs whose next charge (`lastCharge + interval`) falls in
   `(today, today+30d]`; count, expected $, and a list. Excludes past-due/stale.
+- **ARPU over time** — at each completed month end, committed MRR / count of committed subs
+  (via the shared `committedSubAt` snapshot helper); `count === 0` months render as 0.
 
 ## Verifying changes (no test framework)
 

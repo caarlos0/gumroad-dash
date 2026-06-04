@@ -53,6 +53,21 @@ const endOfMonth = (y, m) => new Date(Date.UTC(y, m + 1, 0));
 const intervalMonths = (recurrence) => (recurrence === "yearly" ? 12 : 1);
 // Grace period (days) past the expected renewal before a sub is treated as lapsed.
 const graceDays = (recurrence) => (recurrence === "yearly" ? 30 : 14);
+
+// Committed-revenue snapshot: the charge that makes a subscription "active" as of `asOf`
+// (latest charge on/before the date, still a subscription, not cancelled by then, and whose
+// billing period still covers the date), or null. Shared by historical MRR, ARPU, churn and
+// the MRR waterfall so those views can't drift definitionally. Note: no staleness grace here.
+const committedSubAt = (list, asOf) => {
+  let last = null;
+  for (const r of list) {
+    if (r.date <= asOf) last = r; else break;
+  }
+  if (!last || !last.recurrence) return null;
+  if (last.cancellation && last.cancellation <= asOf) return null;
+  if (addMonths(last.date, intervalMonths(last.recurrence)) <= asOf) return null;
+  return last;
+};
 const NOW = new Date();
 const TODAY = new Date(Date.UTC(NOW.getUTCFullYear(), NOW.getUTCMonth(), NOW.getUTCDate()));
 
@@ -189,26 +204,20 @@ function computeMetrics(model) {
     }
   }
 
-  /* --- Historical committed MRR at each completed month end --- */
+  /* --- Historical committed MRR + ARPU at each completed month end --- */
   // Exclude the current (still-open) month so the line doesn't dip from
   // renewals that simply haven't been charged yet this month.
   const mrrMonths = months.filter((mo) => mo.end < TODAY);
-  const mrrSeries = mrrMonths.map(({ end }) => {
-    let total = 0;
+  const committedMonths = mrrMonths.map(({ end }) => {
+    let total = 0, count = 0;
     for (const list of byEmail.values()) {
-      // latest charge on/before month end
-      let last = null;
-      for (const r of list) {
-        if (r.date <= end) last = r; else break;
-      }
-      if (!last || !last.recurrence) continue;
-      // Drop once cancelled (committed-revenue view), consistent with current MRR.
-      if (last.cancellation && last.cancellation <= end) continue;
-      const coverEnd = addMonths(last.date, intervalMonths(last.recurrence));
-      if (coverEnd > end) total += monthlyValue(last);
+      const sub = committedSubAt(list, end);
+      if (sub) { total += monthlyValue(sub); count++; }
     }
-    return total;
+    return { total, count };
   });
+  const mrrSeries = committedMonths.map((c) => c.total);
+  const arpuSeries = committedMonths.map((c) => (c.count ? c.total / c.count : 0));
 
   /* --- Actual net revenue per month --- */
   const revByMonth = new Map();
@@ -298,6 +307,7 @@ function computeMetrics(model) {
     monthLabels: months.map((mo) => mo.key),
     mrrLabels: mrrMonths.map((mo) => mo.key),
     mrrSeries, revSeries, newSeries, cancelSeries,
+    arpuSeries,
     cumulativeRevSeries,
     discounts: { freeCount, discountedCount, fullCount, codeCounts, totalCodes: codeCounts.length, discountedCustomers },
   };
@@ -474,6 +484,25 @@ function render(M) {
       maintainAspectRatio: false,
       plugins: { legend: { position: "right", labels: { font: baseFont, color: C.black } } },
     },
+  }));
+
+  /* ARPU over time (aligned with MRR months) */
+  charts.push(new Chart(document.getElementById("arpuChart"), {
+    type: "line",
+    data: {
+      labels: M.mrrLabels.map(monthLabel),
+      datasets: [{
+        label: "ARPU",
+        data: M.arpuSeries,
+        borderColor: C.black,
+        backgroundColor: "rgba(144,168,237,0.30)",
+        fill: true,
+        tension: 0.25,
+        pointRadius: 0,
+        borderWidth: 2,
+      }],
+    },
+    options: chartOpts((v) => fmtMoney2(v)),
   }));
 
   /* Cumulative net revenue */
