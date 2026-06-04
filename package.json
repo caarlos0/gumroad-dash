@@ -1,0 +1,14 @@
+{
+  "name": "gumroad-dash",
+  "version": "1.0.0",
+  "description": "Static, backend-free dashboard for Gumroad sales CSV exports: MRR, revenue, and subscription-based income forecasts.",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm dlx serve ."
+  },
+  "license": "MIT",
+  "dependencies": {
+    "chart.js": "^4.5.1",
+    "papaparse": "^5.5.3"
+  }
+}

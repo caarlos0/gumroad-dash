@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gumroad Sales Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=ABeeZee:ital@0;1&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">💰</span>
+      <span class="brand-name">Sales Dashboard</span>
+    </div>
+    <div class="topbar-actions">
+      <span id="dataAsOf" class="data-asof"></span>
+      <span id="fileLabel" class="file-label"></span>
+      <button id="loadBtn" class="btn">Load CSV</button>
+      <input type="file" id="fileInput" accept=".csv" hidden />
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Empty state / dropzone -->
+    <section id="dropzone" class="dropzone">
+      <div class="dropzone-inner">
+        <h1>Drop your Gumroad sales export here</h1>
+        <p>Everything runs in your browser. No data ever leaves your machine.</p>
+        <button id="dropBtn" class="btn btn-lg">Choose CSV file</button>
+        <p class="hint">Export from Gumroad &rarr; Sales &rarr; Export &rarr; Download CSV</p>
+      </div>
+    </section>
+
+    <!-- Dashboard -->
+    <section id="dashboard" class="dashboard" hidden>
+      <h1 class="page-title">Overview</h1>
+      <div id="cards" class="cards"></div>
+
+      <div class="panel highlight">
+        <div class="panel-head">
+          <h2>Revenue forecast</h2>
+          <p class="panel-sub">Net income by month: actual received (past &amp; month-to-date) plus projected renewals from active subscriptions, assuming no churn.</p>
+          <p id="staleNote" class="panel-sub stale-note"></p>
+        </div>
+        <div id="forecastCards" class="cards cards-forecast"></div>
+        <div class="chart-wrap">
+          <canvas id="forecastChart"></canvas>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-head"><h2>MRR over time</h2><p class="panel-sub">Net monthly recurring revenue at each month's end.</p></div>
+          <div class="chart-wrap"><canvas id="mrrChart"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2>Net revenue per month</h2><p class="panel-sub">Actual money received, by charge month.</p></div>
+          <div class="chart-wrap"><canvas id="revenueChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-head"><h2>New vs. cancelled subscribers</h2><p class="panel-sub">Monthly subscription starts and cancellations.</p></div>
+          <div class="chart-wrap"><canvas id="growthChart"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2>Active subscribers by tier</h2><p class="panel-sub">Current paying subscriptions by plan.</p></div>
+          <div class="chart-wrap"><canvas id="tierChart"></canvas></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>Built for local use &middot; all processing happens in your browser.</span>
+  </footer>
+
+  <script src="node_modules/papaparse/papaparse.min.js"></script>
+  <script src="node_modules/chart.js/dist/chart.umd.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
