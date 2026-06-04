@@ -128,6 +128,9 @@ Key rules — keep these consistent if you touch them:
 - **MRR movement** — month-over-month committed-MRR change via `committedSubAt` at consecutive
   completed month ends, split into new / expansion / contraction / churn. The four series sum to
   `mrrSeries[i] − mrrSeries[i-1]` exactly; aligned to `mrrMonths` from index 1.
+- **Monthly churn rate** — over the same transitions: logo churn (lost subs / subs active at
+  start) and revenue churn (churned MRR / MRR at start), as percentages. `null` when nobody was
+  active at the start (rendered as a gap via `spanGaps`).
 
 ## Verifying changes (no test framework)
 

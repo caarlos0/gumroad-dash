@@ -246,16 +246,20 @@ function computeMetrics(model) {
   // Aligned to mrrMonths starting at index 1 (the first month has no prior to compare).
   const moveLabels = mrrMonths.slice(1).map((mo) => mo.key);
   const moveNew = [], moveExpansion = [], moveChurned = [], moveContraction = [];
+  // Monthly churn rates over the same transitions (null when no one was active at the start).
+  const logoChurnSeries = [], revenueChurnSeries = [];
   for (let i = 1; i < mrrMonths.length; i++) {
     const prevEnd = mrrMonths[i - 1].end, curEnd = mrrMonths[i].end;
     let nw = 0, exp = 0, churn = 0, contr = 0;
+    let startCount = 0, lostCount = 0, startMrr = 0;
     for (const list of byEmail.values()) {
       const p = committedSubAt(list, prevEnd);
       const c = committedSubAt(list, curEnd);
       const pv = p ? monthlyValue(p) : 0;
       const cv = c ? monthlyValue(c) : 0;
+      if (p) { startCount++; startMrr += pv; }
       if (!p && c) nw += cv;
-      else if (p && !c) churn += pv;
+      else if (p && !c) { churn += pv; lostCount++; }
       else if (p && c) {
         if (cv > pv) exp += cv - pv;
         else if (cv < pv) contr += pv - cv;
@@ -265,6 +269,8 @@ function computeMetrics(model) {
     moveExpansion.push(exp);
     moveChurned.push(-churn);
     moveContraction.push(-contr);
+    logoChurnSeries.push(startCount ? (lostCount / startCount) * 100 : null);
+    revenueChurnSeries.push(startMrr ? (churn / startMrr) * 100 : null);
   }
 
   /* --- Actual net revenue per month --- */
@@ -384,6 +390,7 @@ function computeMetrics(model) {
     arpuSeries, newRevSeries, returningRevSeries,
     geography, ltv,
     moveLabels, moveNew, moveExpansion, moveChurned, moveContraction,
+    logoChurnSeries, revenueChurnSeries,
     cumulativeRevSeries,
     discounts: { freeCount, discountedCount, fullCount, codeCounts, totalCodes: codeCounts.length, discountedCustomers },
   };
@@ -647,6 +654,19 @@ function render(M) {
       ...chartOpts((v) => fmtMoney(v)),
       scales: { x: { stacked: true, ...gridOpts }, y: { stacked: true, ...gridOpts } },
     },
+  }));
+
+  /* Monthly churn rate (logo + revenue) */
+  charts.push(new Chart(document.getElementById("churnChart"), {
+    type: "line",
+    data: {
+      labels: M.moveLabels.map(monthLabel),
+      datasets: [
+        { label: "Logo churn", data: M.logoChurnSeries, borderColor: C.red, backgroundColor: "transparent", tension: 0.25, pointRadius: 0, borderWidth: 2, spanGaps: true },
+        { label: "Revenue churn", data: M.revenueChurnSeries, borderColor: C.purple, backgroundColor: "transparent", tension: 0.25, pointRadius: 0, borderWidth: 2, spanGaps: true },
+      ],
+    },
+    options: chartOpts((v) => `${(+v).toFixed(1)}%`),
   }));
 
   /* Cumulative net revenue */
