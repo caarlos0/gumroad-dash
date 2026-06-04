@@ -18,6 +18,9 @@ const fmtMoney2 = (n) =>
   "$" + (n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtInt = (n) => (n || 0).toLocaleString("en-US");
 
+// Add n to the running total stored under key in a Map (0 if absent).
+const bump = (map, key, n) => map.set(key, (map.get(key) || 0) + n);
+
 const parseDay = (s) => {
   if (!s) return null;
   const m = String(s).slice(0, 10).match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -130,7 +133,7 @@ function computeMetrics(model) {
     while (charge <= TODAY) charge = addMonths(charge, step);
     while (charge <= horizon) {
       const key = monthKey(charge);
-      forecastByMonth.set(key, (forecastByMonth.get(key) || 0) + r.net);
+      bump(forecastByMonth, key, r.net);
       if (charge <= d7) next7 += r.net;
       if (charge <= d30) next30 += r.net;
       if (charge <= d90) next90 += r.net;
@@ -178,14 +181,14 @@ function computeMetrics(model) {
 
   /* --- Actual net revenue per month --- */
   const revByMonth = new Map();
-  for (const r of rows) revByMonth.set(monthKey(r.date), (revByMonth.get(monthKey(r.date)) || 0) + r.net);
+  for (const r of rows) bump(revByMonth, monthKey(r.date), r.net);
   const revSeries = months.map((mo) => revByMonth.get(mo.key) || 0);
 
   /* --- New vs cancelled per month --- */
   const newByMonth = new Map();
   for (const list of byEmail.values()) {
     const first = list[0];
-    newByMonth.set(monthKey(first.date), (newByMonth.get(monthKey(first.date)) || 0) + 1);
+    bump(newByMonth, monthKey(first.date), 1);
   }
   const cancelByMonth = new Map();
   const seenCancel = new Set();
@@ -193,7 +196,7 @@ function computeMetrics(model) {
     const last = list[list.length - 1];
     if (last.cancellation && !seenCancel.has(last.email)) {
       seenCancel.add(last.email);
-      cancelByMonth.set(monthKey(last.cancellation), (cancelByMonth.get(monthKey(last.cancellation)) || 0) + 1);
+      bump(cancelByMonth, monthKey(last.cancellation), 1);
     }
   }
   const newSeries = months.map((mo) => newByMonth.get(mo.key) || 0);
@@ -210,7 +213,11 @@ function computeMetrics(model) {
   const codeCounts = [...codeCustomers.entries()]
     .map(([code, set]) => ({ code, count: set.size }))
     .sort((a, b) => b.count - a.count);
-  const discountedCustomers = new Set([].concat(...[...codeCustomers.values()].map((s) => [...s]))).size;
+  const allDiscounted = new Set();
+  for (const set of codeCustomers.values()) {
+    for (const email of set) allDiscounted.add(email);
+  }
+  const discountedCustomers = allDiscounted.size;
 
   // Price breakdown over subscriptions with active access (not cancelled, not ended).
   // Note: free (100%-off) subs don't generate $0 renewals, so the revenue staleness
