@@ -522,8 +522,23 @@ if (typeof document !== "undefined") {
   });
   };
 
+  const loadDemo = () => {
+    fetch("fake_sales_data.csv")
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.text();
+      })
+      .then((text) => {
+        currentFileName = "fake_sales_data.csv";
+        const res = Papa.parse(text, { header: true, skipEmptyLines: true });
+        render(computeMetrics(buildModel(res.data)));
+      })
+      .catch((e) => alert("Could not load demo data: " + e.message));
+  };
+
   document.getElementById("loadBtn").addEventListener("click", () => document.getElementById("fileInput").click());
   document.getElementById("dropBtn").addEventListener("click", () => document.getElementById("fileInput").click());
+  document.getElementById("demoBtn").addEventListener("click", loadDemo);
   document.getElementById("fileInput").addEventListener("change", (e) => {
     if (e.target.files[0]) handleFile(e.target.files[0]);
   });

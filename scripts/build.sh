@@ -7,7 +7,7 @@ set -eu
 rm -rf dist
 mkdir -p dist/vendor
 
-cp index.html style.css app.js dist/
+cp index.html style.css app.js fake_sales_data.csv dist/
 cp node_modules/papaparse/papaparse.min.js dist/vendor/
 cp node_modules/chart.js/dist/chart.umd.min.js dist/vendor/
 
