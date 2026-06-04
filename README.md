@@ -46,6 +46,20 @@ pnpm dev          # static server at http://localhost:3000
 Opening `index.html` directly over `file://` also works after `pnpm install` (all paths are
 relative).
 
+## Deploying to Cloudflare Pages
+
+The page loads its libs from `node_modules/` during local dev, so deployment uses a tiny build
+step (`scripts/build.sh`) that assembles a self-contained `dist/` — copying the static files,
+vendoring the two JS libs into `dist/vendor/`, and rewriting the `<script>` paths.
+
+```sh
+pnpm build        # produces dist/
+pnpm deploy       # builds, then runs `wrangler pages deploy`
+```
+
+[`wrangler.toml`](wrangler.toml) sets `pages_build_output_dir = "dist"`. For a Git-connected
+Pages project, set the build command to `pnpm build` and the output directory to `dist`.
+
 ## How it works
 
 Vanilla HTML/CSS/JS — no framework, no build step. The CSV is parsed in the browser, grouped

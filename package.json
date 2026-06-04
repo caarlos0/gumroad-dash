@@ -4,7 +4,9 @@
   "description": "Static, backend-free dashboard for Gumroad sales CSV exports: MRR, revenue, and subscription-based income forecasts.",
   "private": true,
   "scripts": {
-    "dev": "pnpm dlx serve ."
+    "dev": "pnpm dlx serve .",
+    "build": "sh scripts/build.sh",
+    "deploy": "pnpm build && pnpm dlx wrangler pages deploy"
   },
   "license": "MIT",
   "dependencies": {

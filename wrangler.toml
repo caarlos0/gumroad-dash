@@ -1,0 +1,6 @@
+name = "gumroad-dash"
+compatibility_date = "2026-06-04"
+
+# Cloudflare Pages serves the static site assembled by `pnpm build` (scripts/build.sh),
+# which vendors the JS libs so the output directory is fully self-contained.
+pages_build_output_dir = "dist"

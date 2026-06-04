@@ -43,6 +43,16 @@ pnpm dev          # static server at http://localhost:3000, then load a CSV
 ```
 Opening `index.html` over `file://` also works after `pnpm install` (paths are relative).
 
+## Deploying (Cloudflare Pages)
+
+The page references libs at `node_modules/...` for local dev, which won't deploy. So
+`scripts/build.sh` (run via `pnpm build`) assembles a self-contained `dist/`: it copies the
+static files, vendors the two libs into `dist/vendor/`, and rewrites the `<script>` src paths.
+`wrangler.toml` sets `pages_build_output_dir = "dist"`. `pnpm deploy` runs the build then
+`wrangler pages deploy`. `dist/` is gitignored. **If you add/rename a static file or a
+`<script>` tag, update `scripts/build.sh` accordingly.**
+
+
 ## CSV data model (learned from real exports)
 
 - One product; **each row is one charge**. The header has ~70 columns; only a handful matter.
