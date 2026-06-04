@@ -122,6 +122,9 @@ Key rules — keep these consistent if you touch them:
   first-ever (`list[0]`) or a repeat; the two series sum to `revSeries`.
 - **Top countries** — top 10 countries by unique-customer count (attributed via each customer's
   first-charge `country`), with lifetime net revenue per country in the tooltip.
+- **Customer lifetime & LTV** — all-time avg revenue per customer; plus, for already-churned
+  (cancelled) subscribers, count, avg lifespan in months (first charge → cancellation), and avg
+  lifetime revenue. Churned-only stats are labelled as such; guards for zero churned.
 
 ## Verifying changes (no test framework)
 

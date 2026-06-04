@@ -150,6 +150,26 @@ function computeMetrics(model) {
   const lifetimeNet = rows.reduce((s, r) => s + r.net, 0);
   const totalCustomers = byEmail.size;
 
+  /* --- Customer lifetime & LTV --- */
+  // All-time average revenue per customer, plus observed lifespan/value for
+  // subscribers who have already churned (cancelled), which gives a grounded LTV.
+  const avgRevPerCustomer = totalCustomers ? lifetimeNet / totalCustomers : 0;
+  const MS_PER_MONTH = 365.25 / 12 * 864e5;
+  let churnedCount = 0, churnedLifespanSum = 0, churnedRevSum = 0;
+  for (const list of byEmail.values()) {
+    const last = list[list.length - 1];
+    if (!last.recurrence || !last.cancellation) continue;
+    churnedCount++;
+    churnedLifespanSum += Math.max(0, (last.cancellation - list[0].date) / MS_PER_MONTH);
+    churnedRevSum += list.reduce((a, r) => a + r.net, 0);
+  }
+  const ltv = {
+    avgRevPerCustomer,
+    churnedCount,
+    avgLifespanMonths: churnedCount ? churnedLifespanSum / churnedCount : 0,
+    avgChurnedRevenue: churnedCount ? churnedRevSum / churnedCount : 0,
+  };
+
   /* --- Forward forecast from active subscriptions --- */
   const horizon = addMonths(TODAY, 12);
   const forecastByMonth = new Map(); // monthKey -> net
@@ -335,7 +355,7 @@ function computeMetrics(model) {
     mrrLabels: mrrMonths.map((mo) => mo.key),
     mrrSeries, revSeries, newSeries, cancelSeries,
     arpuSeries, newRevSeries, returningRevSeries,
-    geography,
+    geography, ltv,
     cumulativeRevSeries,
     discounts: { freeCount, discountedCount, fullCount, codeCounts, totalCodes: codeCounts.length, discountedCustomers },
   };
@@ -664,6 +684,15 @@ function render(M) {
       "</tbody></table>" +
       (M.renewals.list.length > renewalRows.length ? `<p class="hint">+${fmtInt(M.renewals.list.length - renewalRows.length)} more</p>` : "")
     : "<p class=\"panel-sub\">No renewals scheduled in the next 30 days.</p>";
+
+  /* Customer lifetime & LTV cards */
+  const L = M.ltv;
+  document.getElementById("ltvCards").innerHTML = [
+    card("Avg revenue / customer", fmtMoney2(L.avgRevPerCustomer), "all customers, all time", true),
+    card("Churned customers", fmtInt(L.churnedCount), "cancelled subscriptions"),
+    card("Avg lifespan", `${L.avgLifespanMonths.toFixed(1)} mo`, "churned customers"),
+    card("Avg lifetime value", fmtMoney2(L.avgChurnedRevenue), "churned customers"),
+  ].join("");
 
   /* Discount cards */
   const D = M.discounts;
