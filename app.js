@@ -261,10 +261,21 @@ function computeMetrics(model) {
 /* ---------- Rendering ---------- */
 let charts = [];
 let currentFileName = "";
+let lastMetrics = null;
 function destroyCharts() { charts.forEach((c) => c.destroy()); charts = []; }
 
 const baseFont = { family: "ABeeZee, sans-serif" };
 const gridOpts = { grid: { color: C.grid }, ticks: { font: baseFont, color: C.black } };
+
+/* Chart colors follow the OS light/dark preference (mirrors the CSS theme). */
+function applyChartTheme() {
+  const dark = typeof window !== "undefined" && window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches;
+  C.black = dark ? "#ece9e0" : "#000000";
+  C.grid = dark ? "rgba(236,233,224,0.12)" : "rgba(0,0,0,0.08)";
+  gridOpts.grid.color = C.grid;
+  gridOpts.ticks.color = C.black;
+}
 
 function card(label, value, sub, accent) {
   return `<div class="card${accent ? " accent" : ""}">
@@ -275,6 +286,8 @@ function card(label, value, sub, accent) {
 }
 
 function render(M) {
+  lastMetrics = M;
+  applyChartTheme();
   document.getElementById("dropzone").hidden = true;
   const dash = document.getElementById("dashboard");
   dash.hidden = false;
@@ -554,4 +567,10 @@ if (typeof document !== "undefined") {
     const f = e.dataTransfer.files[0];
     if (f) handleFile(f);
   });
+
+  if (window.matchMedia) {
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+      if (lastMetrics) render(lastMetrics);
+    });
+  }
 }

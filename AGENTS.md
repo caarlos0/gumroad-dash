@@ -22,6 +22,12 @@ borders with offset box-shadows.
   tags (UMD builds), so `pnpm install` is required before opening the page.
 - `package.json` is **not** `type: module` — `app.js` is a classic browser script that also
   exposes a CommonJS test hook (`module.exports`) for Node-based verification.
+- **Theming**: light/dark follows the OS via `@media (prefers-color-scheme: dark)`, which
+  overrides the `--cream`/`--white`/`--black`/`--shadow` CSS vars (no toggle UI). Text on the
+  pink accent must stay dark in both themes — use the constant `--ink-on-accent` token, never
+  `--black`, for anything on a `--pink` background. Chart colors are set in JS by
+  `applyChartTheme()` (reads `matchMedia`), called at the start of `render()`; a `matchMedia`
+  `change` listener re-renders `lastMetrics` so charts retrack live OS theme switches.
 
 ```
 index.html            # markup: header, dropzone (empty state), dashboard, footer
