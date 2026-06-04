@@ -137,6 +137,9 @@ Key rules — keep these consistent if you touch them:
 - **Plan changes** — upgrades vs downgrades from a hardcoded tier rank
   (`TIER_RANK`: Personal<Startup<Business<Enterprise), counting rank transitions between
   consecutive charges per customer. `Item Price ($)` is intentionally not used (unreliable).
+- **Subscriber retention** — monthly discrete Kaplan-Meier survival curve over 24 months;
+  subscribers still active (or not yet old enough) are right-censored at their account age, so
+  the curve is monotonic non-increasing.
 
 ## Verifying changes (no test framework)
 

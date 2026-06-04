@@ -194,6 +194,34 @@ function computeMetrics(model) {
     avgChurnedRevenue: churnedCount ? churnedRevSum / churnedCount : 0,
   };
 
+  /* --- Subscriber retention (Kaplan-Meier survival) curve --- */
+  // Monthly discrete Kaplan-Meier: at each month the survival fraction is multiplied by
+  // (1 - deaths/at-risk). Subscribers still active (or not yet old enough) are right-censored
+  // at their account age, so they leave the risk set without counting as churn. Monotonic.
+  const SURVIVAL_MONTHS = 24;
+  const subjects = [];
+  for (const list of byEmail.values()) {
+    const first = list[0];
+    if (!first.recurrence) continue; // subscribers only
+    const last = list[list.length - 1];
+    const age = (TODAY - first.date) / MS_PER_MONTH;
+    const ended = last.cancellation || (last.subEnd && last.subEnd < TODAY ? last.subEnd : null);
+    const churned = !!ended;
+    const time = churned ? Math.max(0, (ended - first.date) / MS_PER_MONTH) : age;
+    subjects.push({ churned, time });
+  }
+  const survivalSeries = [100];
+  let surv = 1;
+  for (let m = 0; m < SURVIVAL_MONTHS; m++) {
+    let atRisk = 0, deaths = 0;
+    for (const s of subjects) {
+      if (s.time >= m) atRisk++;
+      if (s.churned && s.time >= m && s.time < m + 1) deaths++;
+    }
+    if (atRisk > 0) surv *= 1 - deaths / atRisk;
+    survivalSeries.push(surv * 100);
+  }
+
   /* --- Plan changes (upgrades vs downgrades) --- */
   // Walk each customer's charges in order; count rank transitions between known tiers.
   let upgrades = 0, downgrades = 0, customersChanged = 0;
@@ -431,6 +459,7 @@ function computeMetrics(model) {
     moveLabels, moveNew, moveExpansion, moveChurned, moveContraction,
     logoChurnSeries, revenueChurnSeries,
     refunds, tierChanges,
+    survivalSeries,
     cumulativeRevSeries,
     discounts: { freeCount, discountedCount, fullCount, codeCounts, totalCodes: codeCounts.length, discountedCustomers },
   };
@@ -707,6 +736,32 @@ function render(M) {
       ],
     },
     options: chartOpts((v) => `${(+v).toFixed(1)}%`),
+  }));
+
+  /* Subscriber retention (survival) curve */
+  charts.push(new Chart(document.getElementById("survivalChart"), {
+    type: "line",
+    data: {
+      labels: M.survivalSeries.map((_, m) => `${m}`),
+      datasets: [{
+        label: "Still subscribed",
+        data: M.survivalSeries,
+        borderColor: C.black,
+        backgroundColor: "rgba(255,144,232,0.25)",
+        fill: true,
+        tension: 0.2,
+        pointRadius: 0,
+        borderWidth: 2,
+        spanGaps: true,
+      }],
+    },
+    options: {
+      ...chartOpts((v) => `${(+v).toFixed(0)}%`),
+      scales: {
+        x: { ...gridOpts, title: { display: true, text: "Months since first charge", font: baseFont, color: C.black } },
+        y: { beginAtZero: true, max: 100, ...gridOpts, ticks: { ...gridOpts.ticks, callback: (v) => `${v}%` } },
+      },
+    },
   }));
 
   /* Cumulative net revenue */
