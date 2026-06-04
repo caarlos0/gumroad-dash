@@ -177,21 +177,40 @@ function computeMetrics(model) {
   /* --- Customer lifetime & LTV --- */
   // All-time average revenue per customer, plus observed lifespan/value for
   // subscribers who have already churned (cancelled), which gives a grounded LTV.
+  // Also broken down by each subscriber's final plan (their last charge's tier).
   const avgRevPerCustomer = totalCustomers ? lifetimeNet / totalCustomers : 0;
   const MS_PER_MONTH = 365.25 / 12 * 864e5;
   let churnedCount = 0, churnedLifespanSum = 0, churnedRevSum = 0;
+  const tierLtv = new Map();
   for (const list of byEmail.values()) {
     const last = list[list.length - 1];
-    if (!last.recurrence || !last.cancellation) continue;
-    churnedCount++;
-    churnedLifespanSum += Math.max(0, (last.cancellation - list[0].date) / MS_PER_MONTH);
-    churnedRevSum += list.reduce((a, r) => a + r.net, 0);
+    if (!last.recurrence) continue;
+    const net = list.reduce((a, r) => a + r.net, 0);
+    const cancelled = !!last.cancellation;
+    const lifespan = cancelled ? Math.max(0, (last.cancellation - list[0].date) / MS_PER_MONTH) : 0;
+    if (cancelled) {
+      churnedCount++;
+      churnedLifespanSum += lifespan;
+      churnedRevSum += net;
+    }
+    const t = tierLtv.get(last.tier) || { tier: last.tier, customers: 0, revenue: 0, churned: 0, lifespanSum: 0 };
+    t.customers++; t.revenue += net;
+    if (cancelled) { t.churned++; t.lifespanSum += lifespan; }
+    tierLtv.set(last.tier, t);
   }
   const ltv = {
     avgRevPerCustomer,
     churnedCount,
     avgLifespanMonths: churnedCount ? churnedLifespanSum / churnedCount : 0,
     avgChurnedRevenue: churnedCount ? churnedRevSum / churnedCount : 0,
+    byTier: [...tierLtv.values()]
+      .map((t) => ({
+        tier: t.tier,
+        customers: t.customers,
+        avgRevenue: t.customers ? t.revenue / t.customers : 0,
+        avgLifespanMonths: t.churned ? t.lifespanSum / t.churned : null,
+      }))
+      .sort((a, b) => b.avgRevenue - a.avgRevenue),
   };
 
   /* --- Subscriber retention (Kaplan-Meier survival) curve --- */
@@ -915,6 +934,12 @@ function render(M) {
     card("Avg lifespan", `${L.avgLifespanMonths.toFixed(1)} mo`, "churned customers"),
     card("Avg lifetime value", fmtMoney2(L.avgChurnedRevenue), "churned customers"),
   ].join("");
+  document.getElementById("ltvByTier").innerHTML =
+    "<table class=\"mini-table\"><thead><tr><td>Plan</td><td class=\"num\">Customers</td><td class=\"num\">Avg LTV</td><td class=\"num\">Avg lifespan</td></tr></thead><tbody>" +
+    L.byTier.map((t) =>
+      `<tr><td>${escapeHtml(t.tier)}</td><td class="num">${fmtInt(t.customers)}</td><td class="num">${fmtMoney2(t.avgRevenue)}</td><td class="num">${t.avgLifespanMonths == null ? "–" : t.avgLifespanMonths.toFixed(1) + " mo"}</td></tr>`
+    ).join("") +
+    "</tbody></table>";
 
   /* Plan change cards */
   const T = M.tierChanges;

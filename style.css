@@ -144,6 +144,7 @@ html, body {
 .data-list { margin-top: 6px; }
 .mini-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .mini-table td { padding: 7px 8px; border-bottom: 1px solid rgba(128,128,128,0.25); }
+.mini-table thead td { font-weight: 700; opacity: 0.6; }
 .mini-table td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .mini-table tr:last-child td { border-bottom: none; }
 .cards-forecast { margin-top: 4px; }
