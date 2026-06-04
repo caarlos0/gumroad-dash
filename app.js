@@ -247,6 +247,8 @@ function render(M) {
   destroyCharts();
 
   const asOf = document.getElementById("dataAsOf");
+  asOf.hidden = false;
+  document.getElementById("loadBtn").hidden = false;
   asOf.textContent = M.latestDate
     ? "Data as of " + M.latestDate.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" })
     : "";
