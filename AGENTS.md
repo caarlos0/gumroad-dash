@@ -134,6 +134,9 @@ Key rules — keep these consistent if you touch them:
 - **Refunds & chargebacks** — computed in `buildModel` from raw rows (the kept set drops fully
   refunded and lost-chargeback charges): total charges, fully-refunded count, chargebacks lost,
   money returned (full + partial), and refund+dispute rate. Attached to the model as `refunds`.
+- **Plan changes** — upgrades vs downgrades from a hardcoded tier rank
+  (`TIER_RANK`: Personal<Startup<Business<Enterprise), counting rank transitions between
+  consecutive charges per customer. `Item Price ($)` is intentionally not used (unreliable).
 
 ## Verifying changes (no test framework)
 

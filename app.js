@@ -71,6 +71,9 @@ const committedSubAt = (list, asOf) => {
 const NOW = new Date();
 const TODAY = new Date(Date.UTC(NOW.getUTCFullYear(), NOW.getUTCMonth(), NOW.getUTCDate()));
 
+// Item Price ($) is unreliable in real exports (often negative), so plan ranking is hardcoded.
+const TIER_RANK = { "(Personal)": 1, "(Startup)": 2, "(Business)": 3, "(Enterprise)": 4 };
+
 /* ---------- Core computation ---------- */
 function buildModel(rawRows) {
   // Keep valid charges, dropping money we didn't keep:
@@ -190,6 +193,21 @@ function computeMetrics(model) {
     avgLifespanMonths: churnedCount ? churnedLifespanSum / churnedCount : 0,
     avgChurnedRevenue: churnedCount ? churnedRevSum / churnedCount : 0,
   };
+
+  /* --- Plan changes (upgrades vs downgrades) --- */
+  // Walk each customer's charges in order; count rank transitions between known tiers.
+  let upgrades = 0, downgrades = 0, customersChanged = 0;
+  for (const list of byEmail.values()) {
+    let changed = false;
+    for (let i = 1; i < list.length; i++) {
+      const a = TIER_RANK[list[i - 1].tier], b = TIER_RANK[list[i].tier];
+      if (!a || !b || a === b) continue;
+      if (b > a) upgrades++; else downgrades++;
+      changed = true;
+    }
+    if (changed) customersChanged++;
+  }
+  const tierChanges = { upgrades, downgrades, customersChanged };
 
   /* --- Forward forecast from active subscriptions --- */
   const horizon = addMonths(TODAY, 12);
@@ -412,7 +430,7 @@ function computeMetrics(model) {
     geography, ltv,
     moveLabels, moveNew, moveExpansion, moveChurned, moveContraction,
     logoChurnSeries, revenueChurnSeries,
-    refunds,
+    refunds, tierChanges,
     cumulativeRevSeries,
     discounts: { freeCount, discountedCount, fullCount, codeCounts, totalCodes: codeCounts.length, discountedCustomers },
   };
@@ -780,6 +798,14 @@ function render(M) {
     card("Churned customers", fmtInt(L.churnedCount), "cancelled subscriptions"),
     card("Avg lifespan", `${L.avgLifespanMonths.toFixed(1)} mo`, "churned customers"),
     card("Avg lifetime value", fmtMoney2(L.avgChurnedRevenue), "churned customers"),
+  ].join("");
+
+  /* Plan change cards */
+  const T = M.tierChanges;
+  document.getElementById("tierChangeCards").innerHTML = [
+    card("Upgrades", fmtInt(T.upgrades), "moves to a higher tier", true),
+    card("Downgrades", fmtInt(T.downgrades), "moves to a lower tier"),
+    card("Customers who changed", fmtInt(T.customersChanged), "changed tier at least once"),
   ].join("");
 
   /* Refunds & chargebacks cards */
