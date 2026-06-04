@@ -231,6 +231,7 @@ function computeMetrics(model) {
 
 /* ---------- Rendering ---------- */
 let charts = [];
+let currentFileName = "";
 function destroyCharts() { charts.forEach((c) => c.destroy()); charts = []; }
 
 const baseFont = { family: "ABeeZee, sans-serif" };
@@ -253,9 +254,10 @@ function render(M) {
   const asOf = document.getElementById("dataAsOf");
   asOf.hidden = false;
   document.getElementById("loadBtn").hidden = false;
-  asOf.textContent = M.latestDate
-    ? "Data as of " + M.latestDate.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" })
+  const asOfDate = M.latestDate
+    ? M.latestDate.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" })
     : "";
+  asOf.textContent = [currentFileName, asOfDate].filter(Boolean).join(" - ");
 
   /* Stat cards */
   document.getElementById("cards").innerHTML = [
@@ -413,7 +415,7 @@ if (typeof module !== "undefined" && module.exports) {
 /* ---------- File loading + DOM wiring (browser only) ---------- */
 if (typeof document !== "undefined") {
   const handleFile = (file) => {
-  document.getElementById("fileLabel").textContent = file.name;
+  currentFileName = file.name;
   Papa.parse(file, {
     header: true,
     skipEmptyLines: true,
