@@ -49,21 +49,25 @@ const TODAY = new Date(Date.UTC(NOW.getUTCFullYear(), NOW.getUTCMonth(), NOW.get
 
 /* ---------- Core computation ---------- */
 function buildModel(rawRows) {
-  // Keep valid, non-fully-refunded charges.
+  // Keep valid charges, dropping money we didn't keep:
+  // - fully refunded rows (Gumroad leaves the original positive Net Total on them)
+  // - lost chargebacks/disputes (Disputed? with Dispute Won? not set)
+  // and reduce Net Total by any partial refund.
   const rows = rawRows
     .filter((r) => r["Purchase ID"] && r["Purchase Date"])
     .map((r) => ({
       email: (r["Purchase Email"] || r["Buyer Email"] || "").toLowerCase(),
       date: parseDay(r["Purchase Date"]),
-      net: parseFloat(r["Net Total ($)"]) || 0,
+      net: (parseFloat(r["Net Total ($)"]) || 0) - (parseFloat(r["Partial Refund ($)"]) || 0),
       recurrence: (r["Recurrence"] || "").trim(),
       tier: (r["Variants"] || "(Unknown)").trim() || "(Unknown)",
       isRecurringCharge: r["Recurring Charge?"] === "1",
       cancellation: parseDay(r["Cancellation Date"]),
       subEnd: parseDay(r["Subscription End Date"]),
       fullyRefunded: r["Fully Refunded?"] === "1",
+      chargeback: r["Disputed?"] === "1" && r["Dispute Won?"] !== "1",
     }))
-    .filter((r) => r.date && !r.fullyRefunded);
+    .filter((r) => r.date && !r.fullyRefunded && !r.chargeback);
 
   // Group charges into subscriptions by email.
   const byEmail = new Map();
