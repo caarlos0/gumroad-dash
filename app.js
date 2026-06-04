@@ -104,12 +104,33 @@ function buildModel(rawRows) {
   }
   for (const list of byEmail.values()) list.sort((a, b) => a.date - b.date);
 
-  return { rows, byEmail };
+  /* Refund/chargeback summary, computed from raw rows since the kept set drops
+     fully-refunded and lost-chargeback charges. */
+  const valid = rawRows.filter((r) => r["Purchase ID"] && r["Purchase Date"]);
+  let fullyRefunded = 0, partialRefundTotal = 0, refundedAmount = 0, chargebacks = 0;
+  for (const r of valid) {
+    if (r["Fully Refunded?"] === "1") {
+      fullyRefunded++;
+      refundedAmount += parseFloat(r["Net Total ($)"]) || 0;
+    }
+    const partial = parseFloat(r["Partial Refund ($)"]) || 0;
+    if (partial > 0) { partialRefundTotal += partial; refundedAmount += partial; }
+    if (r["Disputed?"] === "1" && r["Dispute Won?"] !== "1") chargebacks++;
+  }
+  const refunds = {
+    totalCharges: valid.length,
+    fullyRefunded,
+    chargebacks,
+    partialRefundTotal,
+    refundedAmount,
+    rate: valid.length ? ((fullyRefunded + chargebacks) / valid.length) * 100 : 0,
+  };
+
+  return { rows, byEmail, refunds };
 }
 
 function computeMetrics(model) {
-  const { rows, byEmail } = model;
-
+  const { rows, byEmail, refunds } = model;
   /* --- Active subscriptions + current MRR --- */
   const active = [];
   let staleCount = 0, staleMrr = 0;
@@ -391,6 +412,7 @@ function computeMetrics(model) {
     geography, ltv,
     moveLabels, moveNew, moveExpansion, moveChurned, moveContraction,
     logoChurnSeries, revenueChurnSeries,
+    refunds,
     cumulativeRevSeries,
     discounts: { freeCount, discountedCount, fullCount, codeCounts, totalCodes: codeCounts.length, discountedCustomers },
   };
@@ -758,6 +780,15 @@ function render(M) {
     card("Churned customers", fmtInt(L.churnedCount), "cancelled subscriptions"),
     card("Avg lifespan", `${L.avgLifespanMonths.toFixed(1)} mo`, "churned customers"),
     card("Avg lifetime value", fmtMoney2(L.avgChurnedRevenue), "churned customers"),
+  ].join("");
+
+  /* Refunds & chargebacks cards */
+  const R = M.refunds;
+  document.getElementById("refundCards").innerHTML = [
+    card("Refund + dispute rate", `${R.rate.toFixed(2)}%`, `of ${fmtInt(R.totalCharges)} charges`, true),
+    card("Fully refunded", fmtInt(R.fullyRefunded), "charges returned in full"),
+    card("Chargebacks lost", fmtInt(R.chargebacks), "disputes not won"),
+    card("Money returned", fmtMoney(R.refundedAmount), "full + partial refunds"),
   ].join("");
 
   /* Discount cards */

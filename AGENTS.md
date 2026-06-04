@@ -131,6 +131,9 @@ Key rules — keep these consistent if you touch them:
 - **Monthly churn rate** — over the same transitions: logo churn (lost subs / subs active at
   start) and revenue churn (churned MRR / MRR at start), as percentages. `null` when nobody was
   active at the start (rendered as a gap via `spanGaps`).
+- **Refunds & chargebacks** — computed in `buildModel` from raw rows (the kept set drops fully
+  refunded and lost-chargeback charges): total charges, fully-refunded count, chargebacks lost,
+  money returned (full + partial), and refund+dispute rate. Attached to the model as `refunds`.
 
 ## Verifying changes (no test framework)
 
