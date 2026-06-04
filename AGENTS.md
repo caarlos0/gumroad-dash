@@ -114,6 +114,8 @@ Key rules — keep these consistent if you touch them:
   `lifetimeNet`.
 - **MRR by recurrence / by tier** — active subs' `monthlyValue` summed by `recurrence`
   (monthly vs yearly) and by `tier`; each split sums to total MRR.
+- **Renewals due soon** — active subs whose next charge (`lastCharge + interval`) falls in
+  `(today, today+30d]`; count, expected $, and a list. Excludes past-due/stale.
 
 ## Verifying changes (no test framework)
 

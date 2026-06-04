@@ -17,6 +17,12 @@ const fmtMoney = (n) =>
 const fmtMoney2 = (n) =>
   "$" + (n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtInt = (n) => (n || 0).toLocaleString("en-US");
+const fmtDay = (iso) => {
+  const d = parseDay(iso);
+  return d ? d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" }) : iso;
+};
+const escapeHtml = (s) =>
+  String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 // Add n to the running total stored under key in a Map (0 if absent).
 const bump = (map, key, n) => map.set(key, (map.get(key) || 0) + n);
@@ -152,6 +158,21 @@ function computeMetrics(model) {
     }
   }
 
+  /* --- Renewals due in the next 30 days (from active subs) --- */
+  const renewalsList = [];
+  for (const r of active) {
+    const next = addMonths(r.date, intervalMonths(r.recurrence));
+    if (next > TODAY && next <= d30) {
+      renewalsList.push({ email: r.email, date: monthKey(next) + "-" + String(next.getUTCDate()).padStart(2, "0"), net: r.net, tier: r.tier });
+    }
+  }
+  renewalsList.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  const renewals = {
+    count: renewalsList.length,
+    amount: renewalsList.reduce((s, x) => s + x.net, 0),
+    list: renewalsList,
+  };
+
   /* --- Historical month range --- */
   let minDate = null, maxDate = null;
   for (const r of rows) {
@@ -273,6 +294,7 @@ function computeMetrics(model) {
       next7, next30, next90, next12mo,
       months: fMonths, actual: forecastActual, projected: forecastProjected, currentIdx,
     },
+    renewals,
     monthLabels: months.map((mo) => mo.key),
     mrrLabels: mrrMonths.map((mo) => mo.key),
     mrrSeries, revSeries, newSeries, cancelSeries,
@@ -520,6 +542,21 @@ function render(M) {
       scales: { x: { beginAtZero: true, ...gridOpts, ticks: { ...gridOpts.ticks, callback: (v) => fmtMoney(v) } }, y: gridOpts },
     },
   }));
+
+  /* Renewals due soon */
+  document.getElementById("renewalCards").innerHTML = [
+    card("Renewals next 30d", fmtInt(M.renewals.count), null, true),
+    card("Expected", fmtMoney2(M.renewals.amount)),
+  ].join("");
+  const renewalRows = M.renewals.list.slice(0, 12);
+  document.getElementById("renewalList").innerHTML = renewalRows.length
+    ? "<table class=\"mini-table\"><tbody>" +
+      renewalRows.map((x) =>
+        `<tr><td>${fmtDay(x.date)}</td><td>${escapeHtml(x.email)}</td><td>${escapeHtml(x.tier)}</td><td class="num">${fmtMoney2(x.net)}</td></tr>`
+      ).join("") +
+      "</tbody></table>" +
+      (M.renewals.list.length > renewalRows.length ? `<p class="hint">+${fmtInt(M.renewals.list.length - renewalRows.length)} more</p>` : "")
+    : "<p class=\"panel-sub\">No renewals scheduled in the next 30 days.</p>";
 
   /* Discount cards */
   const D = M.discounts;
