@@ -1141,7 +1141,7 @@ if (typeof document !== "undefined") {
       const img = document.createElement("img");
       img.className = "chart-print-img";
       img.src = c.toBase64Image("image/png", 1);
-      img.style.cssText = "display:block;width:100%;height:auto;";
+      img.style.cssText = "width:100%;height:auto;";
       c.canvas.parentElement.appendChild(img);
     });
   });

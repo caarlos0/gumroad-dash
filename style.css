@@ -185,6 +185,9 @@ abbr[title] { text-decoration: underline dotted; text-underline-offset: 3px; cur
 .cards-forecast { margin-top: 4px; }
 .stale-note { color: var(--red); margin-top: 8px; font-weight: 500; }
 
+/* chart snapshot images: only visible during printing */
+.chart-print-img { display: none; }
+
 /* Footer */
 .footer { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; padding: 24px; font-size: 13px; opacity: 0.6; border-top: var(--border); background: var(--white); }
 .footer a { color: var(--black); font-weight: 500; text-decoration: underline; text-decoration-color: var(--pink); text-underline-offset: 2px; }
