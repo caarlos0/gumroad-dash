@@ -184,3 +184,6 @@ abbr[title] { text-decoration: underline dotted; text-underline-offset: 3px; cur
 .footer { text-align: center; padding: 24px; font-size: 13px; opacity: 0.6; border-top: var(--border); background: var(--white); }
 .footer a { color: var(--black); font-weight: 500; text-decoration: underline; text-decoration-color: var(--pink); text-underline-offset: 2px; }
 .footer a:hover { text-decoration-color: var(--black); }
+.footer-sep { margin: 0 8px; }
+.footer-repo { display: inline-flex; align-items: center; gap: 5px; }
+.footer-repo svg { width: 15px; height: 15px; fill: var(--black); }
