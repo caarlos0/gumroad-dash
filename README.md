@@ -9,7 +9,7 @@ Everything runs in your browser — **no server, no build, no data ever leaves y
 ![The Missing Gumroad Dashboard](docs/screenshot.png)
 
 > The screenshot above uses [`fake_sales_data.csv`](fake_sales_data.csv) — generated demo data
-> that's safe to share. Your real export stays local.
+> that's safe to share.
 
 ## What it shows
 
@@ -45,35 +45,3 @@ pnpm dev          # static server at http://localhost:3000
 
 Opening `index.html` directly over `file://` also works after `pnpm install` (all paths are
 relative).
-
-## Deploying to Cloudflare Pages
-
-The page loads its libs from `node_modules/` during local dev, so deployment uses a tiny build
-step (`scripts/build.sh`) that assembles a self-contained `dist/` — copying the static files,
-vendoring the two JS libs into `dist/vendor/`, and rewriting the `<script>` paths.
-
-```sh
-pnpm build        # produces dist/
-pnpm deploy       # builds, then runs `wrangler pages deploy`
-```
-
-[`wrangler.toml`](wrangler.toml) sets `pages_build_output_dir = "dist"`. For a Git-connected
-Pages project, set the build command to `pnpm build` and the output directory to `dist`.
-
-## How it works
-
-Vanilla HTML/CSS/JS — no framework, no build step. The CSV is parsed in the browser, grouped
-into subscriptions by email, and turned into metrics and charts.
-
-```
-index.html            markup: header, dropzone, dashboard, footer
-style.css             Gumroad-like theme
-app.js                all logic: parse -> compute -> render
-fake_sales_data.csv   generated demo data (safe to share)
-```
-
-See [`AGENTS.md`](AGENTS.md) for the full data model and computation methodology.
-
-## License
-
-[MIT](LICENSE) © 2026 Carlos Alexandro Becker
