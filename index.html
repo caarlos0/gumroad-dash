@@ -37,139 +37,166 @@
 
     <!-- Dashboard -->
     <section id="dashboard" class="dashboard" hidden>
-      <h1 class="page-title">Overview</h1>
-      <div id="cards" class="cards"></div>
+      <nav id="sectionNav" class="section-nav" aria-label="Dashboard sections">
+        <a href="#sec-overview">Overview</a>
+        <a href="#sec-revenue">Revenue &amp; MRR</a>
+        <a href="#sec-retention">Retention &amp; churn</a>
+        <a href="#sec-customers">Customers</a>
+        <a href="#sec-discounts">Discounts &amp; refunds</a>
+      </nav>
 
-      <div class="panel highlight">
-        <div class="panel-head">
-          <h2>Revenue forecast</h2>
-          <p class="panel-sub">Net income by month: actual received (past &amp; month-to-date) plus projected renewals from active subscriptions, assuming no churn.</p>
-          <p id="staleNote" class="panel-sub stale-note"></p>
-        </div>
-        <div id="forecastCards" class="cards cards-forecast"></div>
-        <div class="chart-wrap">
-          <canvas id="forecastChart"></canvas>
-        </div>
-      </div>
+      <section class="dash-section" id="sec-overview">
+        <h2 class="section-title">Overview</h2>
+        <div id="cards" class="cards"></div>
 
-      <div class="grid-2">
+        <div class="panel highlight">
+          <div class="panel-head">
+            <h2>Revenue forecast</h2>
+            <p class="panel-sub">Net income by month: actual received (past &amp; month-to-date) plus projected renewals from active subscriptions, assuming no churn.</p>
+            <p id="staleNote" class="panel-sub stale-note"></p>
+          </div>
+          <div id="forecastCards" class="cards cards-forecast"></div>
+          <div class="chart-wrap">
+            <canvas id="forecastChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <section class="dash-section" id="sec-revenue">
+        <h2 class="section-title">Revenue &amp; MRR</h2>
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-head"><h2>MRR over time</h2><p class="panel-sub">Net monthly recurring revenue at each month's end.</p></div>
+            <div class="chart-wrap"><canvas id="mrrChart"></canvas></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h2>Net revenue per month</h2><p class="panel-sub">Actual money received, by charge month.</p></div>
+            <div class="chart-wrap"><canvas id="revenueChart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-head"><h2>Cumulative net revenue</h2><p class="panel-sub">Running total of money received over time.</p></div>
+            <div class="chart-wrap"><canvas id="cumulativeChart"></canvas></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h2>ARPU over time</h2><p class="panel-sub">Average net monthly revenue per active subscriber, at each month's end.</p></div>
+            <div class="chart-wrap"><canvas id="arpuChart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-head"><h2>MRR by billing period</h2><p class="panel-sub">Net monthly recurring revenue from monthly vs. yearly plans.</p></div>
+            <div class="chart-wrap"><canvas id="recurrenceMrrChart"></canvas></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h2>MRR by plan</h2><p class="panel-sub">Net monthly recurring revenue contributed by each tier.</p></div>
+            <div class="chart-wrap"><canvas id="tierMrrChart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-head"><h2>MRR movement</h2><p class="panel-sub">Month-over-month change in committed MRR, split into new, expansion, contraction, and churn.</p></div>
+            <div class="chart-wrap"><canvas id="mrrMovementChart"></canvas></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h2>New vs. returning revenue</h2><p class="panel-sub">Each month's net revenue split into first-ever charges (acquisition) and repeat charges (renewals &amp; upgrades).</p></div>
+            <div class="chart-wrap"><canvas id="newReturningChart"></canvas></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="dash-section" id="sec-retention">
+        <h2 class="section-title">Retention &amp; churn</h2>
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-head"><h2>New vs. cancelled subscribers</h2><p class="panel-sub">Monthly subscription starts and cancellations.</p></div>
+            <div class="chart-wrap"><canvas id="growthChart"></canvas></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h2>Monthly churn rate</h2><p class="panel-sub">Share of subscribers (logo) and of MRR lost each month, relative to those active at the month's start.</p></div>
+            <div class="chart-wrap"><canvas id="churnChart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-head"><h2>Subscriber retention</h2><p class="panel-sub">Share of subscribers still active N months after their first charge (only counting those whose account is old enough to have reached each point).</p></div>
+            <div class="chart-wrap"><canvas id="survivalChart"></canvas></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h2>Plan changes</h2><p class="panel-sub">Upgrades and downgrades between tiers (Personal → Startup → Business → Enterprise) over each customer's history.</p></div>
+            <div id="tierChangeCards" class="cards"></div>
+          </div>
+        </div>
+
         <div class="panel">
-          <div class="panel-head"><h2>MRR over time</h2><p class="panel-sub">Net monthly recurring revenue at each month's end.</p></div>
-          <div class="chart-wrap"><canvas id="mrrChart"></canvas></div>
+          <div class="panel-head"><h2>Customer lifetime &amp; LTV</h2><p class="panel-sub">All-time value per customer, and observed lifespan/value of subscribers who have already churned.</p></div>
+          <div id="ltvCards" class="cards"></div>
+          <div id="ltvByTier" class="data-list"></div>
         </div>
+
         <div class="panel">
-          <div class="panel-head"><h2>Net revenue per month</h2><p class="panel-sub">Actual money received, by charge month.</p></div>
-          <div class="chart-wrap"><canvas id="revenueChart"></canvas></div>
+          <div class="panel-head"><h2>Renewals due soon</h2><p class="panel-sub">Active subscriptions scheduled to renew in the next 30 days.</p></div>
+          <div id="renewalCards" class="cards"></div>
+          <div id="renewalList" class="data-list"></div>
         </div>
-      </div>
+      </section>
 
-      <div class="grid-2">
+      <section class="dash-section" id="sec-customers">
+        <h2 class="section-title">Customers</h2>
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-head"><h2>Active subscribers by tier</h2><p class="panel-sub">Current paying subscriptions by plan.</p></div>
+            <div class="chart-wrap"><canvas id="tierChart"></canvas></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h2>Top countries</h2><p class="panel-sub">Customers and lifetime net revenue by country (top 10 by customer count).</p></div>
+            <div class="chart-wrap"><canvas id="geoChart"></canvas></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="dash-section" id="sec-discounts">
+        <h2 class="section-title">Discounts &amp; refunds</h2>
         <div class="panel">
-          <div class="panel-head"><h2>New vs. cancelled subscribers</h2><p class="panel-sub">Monthly subscription starts and cancellations.</p></div>
-          <div class="chart-wrap"><canvas id="growthChart"></canvas></div>
+          <div class="panel-head">
+            <h2>Discounts</h2>
+            <p class="panel-sub">Discount-code usage and how many subscribers with active access pay full price, a discounted price, or nothing.</p>
+          </div>
+          <div id="discountCards" class="cards"></div>
         </div>
+
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-head"><h2>Customers per discount code</h2><p class="panel-sub">Unique customers who have used each code (all time).</p></div>
+            <div class="chart-wrap"><canvas id="discountCodeChart"></canvas></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h2>Subscriptions by price</h2><p class="panel-sub">Subscriptions with active access, by how much they pay.</p></div>
+            <div class="chart-wrap"><canvas id="priceTypeChart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-head"><h2>Cancel rate by discount</h2><p class="panel-sub">Share of subscribers who have cancelled, grouped by full price, paid discount, or free ($0).</p></div>
+            <div id="discountChurnCards" class="cards"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h2>Discount ROI <span class="badge">estimate</span></h2><p class="panel-sub">Rough estimate: full price inferred from non-discounted peers (Item Price is unreliable), so treat these as ballpark figures.</p></div>
+            <div id="discountRoiCards" class="cards"></div>
+          </div>
+        </div>
+
         <div class="panel">
-          <div class="panel-head"><h2>Active subscribers by tier</h2><p class="panel-sub">Current paying subscriptions by plan.</p></div>
-          <div class="chart-wrap"><canvas id="tierChart"></canvas></div>
+          <div class="panel-head"><h2>Refunds &amp; chargebacks</h2><p class="panel-sub">Refund and dispute rate across all charges (computed from the raw export, including refunded rows).</p></div>
+          <div id="refundCards" class="cards"></div>
         </div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-head"><h2>Top countries</h2><p class="panel-sub">Customers and lifetime net revenue by country (top 10 by customer count).</p></div>
-        <div class="chart-wrap"><canvas id="geoChart"></canvas></div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-head"><h2>New vs. returning revenue</h2><p class="panel-sub">Each month's net revenue split into first-ever charges (acquisition) and repeat charges (renewals &amp; upgrades).</p></div>
-        <div class="chart-wrap"><canvas id="newReturningChart"></canvas></div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-head"><h2>ARPU over time</h2><p class="panel-sub">Average net monthly revenue per active subscriber, at each month's end.</p></div>
-        <div class="chart-wrap"><canvas id="arpuChart"></canvas></div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-head"><h2>MRR movement</h2><p class="panel-sub">Month-over-month change in committed MRR, split into new, expansion, contraction, and churn.</p></div>
-        <div class="chart-wrap"><canvas id="mrrMovementChart"></canvas></div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-head"><h2>Monthly churn rate</h2><p class="panel-sub">Share of subscribers (logo) and of MRR lost each month, relative to those active at the month's start.</p></div>
-        <div class="chart-wrap"><canvas id="churnChart"></canvas></div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-head"><h2>Subscriber retention</h2><p class="panel-sub">Share of subscribers still active N months after their first charge (only counting those whose account is old enough to have reached each point).</p></div>
-        <div class="chart-wrap"><canvas id="survivalChart"></canvas></div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-head"><h2>Cumulative net revenue</h2><p class="panel-sub">Running total of money received over time.</p></div>
-        <div class="chart-wrap"><canvas id="cumulativeChart"></canvas></div>
-      </div>
-
-      <div class="grid-2">
-        <div class="panel">
-          <div class="panel-head"><h2>MRR by billing period</h2><p class="panel-sub">Net monthly recurring revenue from monthly vs. yearly plans.</p></div>
-          <div class="chart-wrap"><canvas id="recurrenceMrrChart"></canvas></div>
-        </div>
-        <div class="panel">
-          <div class="panel-head"><h2>MRR by plan</h2><p class="panel-sub">Net monthly recurring revenue contributed by each tier.</p></div>
-          <div class="chart-wrap"><canvas id="tierMrrChart"></canvas></div>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-head"><h2>Renewals due soon</h2><p class="panel-sub">Active subscriptions scheduled to renew in the next 30 days.</p></div>
-        <div id="renewalCards" class="cards"></div>
-        <div id="renewalList" class="data-list"></div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-head"><h2>Customer lifetime &amp; LTV</h2><p class="panel-sub">All-time value per customer, and observed lifespan/value of subscribers who have already churned.</p></div>
-        <div id="ltvCards" class="cards"></div>
-        <div id="ltvByTier" class="data-list"></div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-head"><h2>Plan changes</h2><p class="panel-sub">Upgrades and downgrades between tiers (Personal → Startup → Business → Enterprise) over each customer's history.</p></div>
-        <div id="tierChangeCards" class="cards"></div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-head"><h2>Refunds &amp; chargebacks</h2><p class="panel-sub">Refund and dispute rate across all charges (computed from the raw export, including refunded rows).</p></div>
-        <div id="refundCards" class="cards"></div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-head">
-          <h2>Discounts</h2>
-          <p class="panel-sub">Discount-code usage and how many subscribers with active access pay full price, a discounted price, or nothing.</p>
-        </div>
-        <div id="discountCards" class="cards"></div>
-      </div>
-
-      <div class="grid-2">
-        <div class="panel">
-          <div class="panel-head"><h2>Customers per discount code</h2><p class="panel-sub">Unique customers who have used each code (all time).</p></div>
-          <div class="chart-wrap"><canvas id="discountCodeChart"></canvas></div>
-        </div>
-        <div class="panel">
-          <div class="panel-head"><h2>Subscriptions by price</h2><p class="panel-sub">Subscriptions with active access, by how much they pay.</p></div>
-          <div class="chart-wrap"><canvas id="priceTypeChart"></canvas></div>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-head"><h2>Cancel rate by discount</h2><p class="panel-sub">Share of subscribers who have cancelled, grouped by full price, paid discount, or free ($0).</p></div>
-        <div id="discountChurnCards" class="cards"></div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-head"><h2>Discount ROI <span class="badge">estimate</span></h2><p class="panel-sub">Rough estimate: full price inferred from non-discounted peers (Item Price is unreliable), so treat these as ballpark figures.</p></div>
-        <div id="discountRoiCards" class="cards"></div>
-      </div>
+      </section>
     </section>
   </main>
 

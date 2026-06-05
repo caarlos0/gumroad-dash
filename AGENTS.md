@@ -28,6 +28,11 @@ borders with offset box-shadows.
   `--black`, for anything on a `--pink` background. Chart colors are set in JS by
   `applyChartTheme()` (reads `matchMedia`), called at the start of `render()`; a `matchMedia`
   `change` listener re-renders `lastMetrics` so charts retrack live OS theme switches.
+- **Dashboard layout**: panels are grouped into five `<section class="dash-section">` blocks
+  (`#sec-overview`, `#sec-revenue`, `#sec-retention`, `#sec-customers`, `#sec-discounts`) with a
+  sticky `.section-nav` of anchor links. An `IntersectionObserver` scroll-spy toggles `.active`
+  on the matching nav link. Panel element IDs are unchanged, so `render()` is unaffected by the
+  grouping — only the surrounding markup moved.
 
 ```
 index.html            # markup: header, dropzone (empty state), dashboard, footer

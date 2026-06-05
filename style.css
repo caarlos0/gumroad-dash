@@ -78,7 +78,36 @@ html, body {
 
 /* Layout */
 .container { max-width: 1180px; margin: 0 auto; padding: 28px 24px 60px; }
-.page-title { font-size: 30px; margin: 4px 0 22px; }
+
+/* In-page section nav + sections */
+.section-nav {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 0;
+  margin-bottom: 6px;
+  background: var(--cream);
+  border-bottom: var(--border);
+}
+.section-nav a {
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--black);
+  background: var(--white);
+  border: var(--border);
+  border-radius: 999px;
+  padding: 6px 14px;
+  box-shadow: var(--shadow-sm);
+  transition: background .15s ease, transform .08s ease;
+}
+.section-nav a:hover { background: var(--pink); color: var(--ink-on-accent); transform: translate(-1px,-1px); }
+.section-nav a.active { background: var(--pink); color: var(--ink-on-accent); }
+.dash-section { scroll-margin-top: 70px; }
+.section-title { font-size: 24px; margin: 22px 0 18px; padding-bottom: 8px; border-bottom: 2px solid var(--black); }
 
 /* Dropzone */
 .dropzone {

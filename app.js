@@ -1118,4 +1118,17 @@ if (typeof document !== "undefined") {
       if (lastMetrics) render(lastMetrics);
     });
   }
+
+  /* Highlight the section currently in view in the sticky nav. */
+  const navLinks = [...document.querySelectorAll(".section-nav a")];
+  const sections = navLinks.map((a) => document.querySelector(a.getAttribute("href")));
+  if (window.IntersectionObserver && sections.every(Boolean)) {
+    const spy = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        navLinks.forEach((a) => a.classList.toggle("active", a.getAttribute("href") === `#${e.target.id}`));
+      }
+    }, { rootMargin: "-60px 0px -65% 0px" });
+    sections.forEach((s) => spy.observe(s));
+  }
 }
