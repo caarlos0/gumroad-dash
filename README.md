@@ -35,8 +35,7 @@ The dashboard never uploads your data — it parses the CSV entirely in the brow
 
 ## Running locally
 
-Dependencies ([PapaParse](https://www.papaparse.com/) for CSV parsing and
-[Chart.js](https://www.chartjs.org/) for charts) are managed with [pnpm](https://pnpm.io/):
+Dependencies are managed with [pnpm](https://pnpm.io/):
 
 ```sh
 pnpm install
