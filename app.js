@@ -1132,10 +1132,14 @@ if (typeof document !== "undefined") {
     });
   }
 
-  /* Resize Chart.js canvases when the browser switches to print layout so
-     they repaint at their new print dimensions instead of remaining blank. */
-  window.addEventListener("beforeprint", () => { charts.forEach((c) => c.resize()); });
-  window.addEventListener("afterprint",  () => { charts.forEach((c) => c.resize()); });
+  /* Resize Chart.js canvases when the browser switches to print layout.
+     matchMedia 'change' fires AFTER print CSS is applied (unlike beforeprint,
+     which fires before), so resize() reads the correct container dimensions. */
+  if (window.matchMedia) {
+    window.matchMedia("print").addEventListener("change", () => {
+      charts.forEach((c) => c.resize());
+    });
+  }
 
   /* Highlight the section currently in view in the sticky nav. */
   const navLinks = [...document.querySelectorAll(".section-nav a")];
