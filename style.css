@@ -197,6 +197,15 @@ abbr[title] { text-decoration: underline dotted; text-underline-offset: 3px; cur
 @media print {
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
+  /* force light-theme values regardless of OS setting so paper is always white */
+  :root {
+    --black: #000000;
+    --cream: #ffffff;
+    --white: #ffffff;
+    --shadow: none;
+    --shadow-sm: none;
+  }
+
   /* hide interactive / nav chrome */
   .topbar-actions,
   .section-nav,
@@ -206,12 +215,12 @@ abbr[title] { text-decoration: underline dotted; text-underline-offset: 3px; cur
   /* flatten topbar to a simple title row */
   .topbar {
     position: static;
-    border-bottom: 2px solid #000;
+    border-bottom: 2px solid var(--black);
     box-shadow: none;
-    background: #fff;
+    background: var(--white);
   }
 
-  body, html { background: #fff; color: #000; }
+  body, html { background: var(--cream); color: var(--black); }
 
   .container { max-width: 100%; padding: 16px; }
 
@@ -221,7 +230,7 @@ abbr[title] { text-decoration: underline dotted; text-underline-offset: 3px; cur
   /* remove offscreen shadows and reduce ink */
   .card, .panel {
     box-shadow: none;
-    border: 1px solid #000;
+    border: 1px solid var(--black);
     break-inside: avoid;
   }
 
