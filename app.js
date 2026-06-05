@@ -1136,11 +1136,12 @@ if (typeof document !== "undefined") {
      Snapshot each chart to a static <img> just before printing and remove
      it afterwards; <img> elements (including data-URLs) print perfectly. */
   window.addEventListener("beforeprint", () => {
+    document.querySelectorAll(".chart-print-img").forEach((img) => img.remove());
     charts.forEach((c) => {
       const img = document.createElement("img");
       img.className = "chart-print-img";
       img.src = c.toBase64Image("image/png", 1);
-      img.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;";
+      img.style.cssText = "display:block;width:100%;height:auto;";
       c.canvas.parentElement.appendChild(img);
     });
   });

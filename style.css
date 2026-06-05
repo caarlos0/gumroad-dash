@@ -224,8 +224,8 @@ abbr[title] { text-decoration: underline dotted; text-underline-offset: 3px; cur
 
   .container { max-width: 100%; padding: 16px; }
 
-  /* single-column layout for grids */
-  .grid-2 { grid-template-columns: 1fr; gap: 16px; }
+  /* keep side-by-side panels side-by-side in print too */
+  .grid-2 { grid-template-columns: 1fr 1fr; gap: 16px; }
 
   /* remove offscreen shadows and reduce ink */
   .card, .panel {
@@ -240,10 +240,10 @@ abbr[title] { text-decoration: underline dotted; text-underline-offset: 3px; cur
   /* section headings start on new page except the first */
   .dash-section + .dash-section { break-before: page; }
 
-  /* charts: snapshot <img> fills the wrap; hide the raw canvas behind it */
-  .chart-wrap { height: 240px; }
+  /* charts: hide raw canvas and print the snapshot image without stretching */
+  .chart-wrap { height: auto; }
   .chart-wrap canvas { display: none; }
-  .chart-print-img { display: block; }
+  .chart-print-img { display: block; width: 100%; height: auto; }
 
   /* strip hover/interactive styles from buttons that are still visible */
   .btn { box-shadow: none; }

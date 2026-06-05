@@ -36,6 +36,10 @@ borders with offset box-shadows.
 - **Mobile tables**: `.data-list` horizontally contains any wide `.mini-table` content so tables
   can't force page-level horizontal scrolling; cells use fixed layout + wrapping, while `.num`
   cells stay nowrap.
+- **Print mode**: `@media print` hides interactive chrome (dropzone/nav/footer/topbar actions),
+  keeps `.grid-2` in two columns (so side-by-side panels stay side-by-side), and uses chart
+  snapshots (`.chart-print-img`) generated in `beforeprint`/removed in `afterprint` because
+  browser print rendering of live `<canvas>` is unreliable.
 
 ```
 index.html            # markup: header, dropzone (empty state), dashboard, footer
