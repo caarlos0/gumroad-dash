@@ -192,3 +192,48 @@ abbr[title] { text-decoration: underline dotted; text-underline-offset: 3px; cur
 .footer-sep { opacity: 0.5; }
 .footer-repo { display: inline-flex; align-items: center; gap: 5px; }
 .footer-repo svg { width: 15px; height: 15px; fill: var(--black); }
+
+/* Print */
+@media print {
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  /* hide interactive / nav chrome */
+  .topbar-actions,
+  .section-nav,
+  .dropzone,
+  .footer { display: none !important; }
+
+  /* flatten topbar to a simple title row */
+  .topbar {
+    position: static;
+    border-bottom: 2px solid #000;
+    box-shadow: none;
+    background: #fff;
+  }
+
+  body, html { background: #fff; color: #000; }
+
+  .container { max-width: 100%; padding: 16px; }
+
+  /* single-column layout for grids */
+  .grid-2 { grid-template-columns: 1fr; gap: 16px; }
+
+  /* remove offscreen shadows and reduce ink */
+  .card, .panel {
+    box-shadow: none;
+    border: 1px solid #000;
+    break-inside: avoid;
+  }
+
+  /* keep cards from splitting across pages */
+  .cards { break-inside: avoid; }
+
+  /* section headings start on new page except the first */
+  .dash-section + .dash-section { break-before: page; }
+
+  /* charts: give canvas a fixed print height so they render properly */
+  .chart-wrap { height: 240px; }
+
+  /* strip hover/interactive styles from buttons that are still visible */
+  .btn { box-shadow: none; }
+}
