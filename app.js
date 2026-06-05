@@ -1132,6 +1132,11 @@ if (typeof document !== "undefined") {
     });
   }
 
+  /* Resize Chart.js canvases when the browser switches to print layout so
+     they repaint at their new print dimensions instead of remaining blank. */
+  window.addEventListener("beforeprint", () => { charts.forEach((c) => c.resize()); });
+  window.addEventListener("afterprint",  () => { charts.forEach((c) => c.resize()); });
+
   /* Highlight the section currently in view in the sticky nav. */
   const navLinks = [...document.querySelectorAll(".section-nav a")];
   const sections = navLinks.map((a) => document.querySelector(a.getAttribute("href")));
