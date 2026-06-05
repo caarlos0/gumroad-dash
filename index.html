@@ -63,10 +63,10 @@
       </section>
 
       <section class="dash-section" id="sec-revenue">
-        <h2 class="section-title">Revenue &amp; MRR</h2>
+        <h2 class="section-title">Revenue &amp; <abbr title="Monthly Recurring Revenue">MRR</abbr></h2>
         <div class="grid-2">
           <div class="panel">
-            <div class="panel-head"><h2>MRR over time</h2><p class="panel-sub">Net monthly recurring revenue at each month's end.</p></div>
+            <div class="panel-head"><h2><abbr title="Monthly Recurring Revenue">MRR</abbr> over time</h2><p class="panel-sub">Net monthly recurring revenue at each month's end.</p></div>
             <div class="chart-wrap"><canvas id="mrrChart"></canvas></div>
           </div>
           <div class="panel">
@@ -81,25 +81,25 @@
             <div class="chart-wrap"><canvas id="cumulativeChart"></canvas></div>
           </div>
           <div class="panel">
-            <div class="panel-head"><h2>ARPU over time</h2><p class="panel-sub">Average net monthly revenue per active subscriber, at each month's end.</p></div>
+            <div class="panel-head"><h2><abbr title="Average Revenue Per User (active subscriber)">ARPU</abbr> over time</h2><p class="panel-sub">Average net monthly revenue per active subscriber, at each month's end.</p></div>
             <div class="chart-wrap"><canvas id="arpuChart"></canvas></div>
           </div>
         </div>
 
         <div class="grid-2">
           <div class="panel">
-            <div class="panel-head"><h2>MRR by billing period</h2><p class="panel-sub">Net monthly recurring revenue from monthly vs. yearly plans.</p></div>
+            <div class="panel-head"><h2><abbr title="Monthly Recurring Revenue">MRR</abbr> by billing period</h2><p class="panel-sub">Net monthly recurring revenue from monthly vs. yearly plans.</p></div>
             <div class="chart-wrap"><canvas id="recurrenceMrrChart"></canvas></div>
           </div>
           <div class="panel">
-            <div class="panel-head"><h2>MRR by plan</h2><p class="panel-sub">Net monthly recurring revenue contributed by each tier.</p></div>
+            <div class="panel-head"><h2><abbr title="Monthly Recurring Revenue">MRR</abbr> by plan</h2><p class="panel-sub">Net monthly recurring revenue contributed by each tier.</p></div>
             <div class="chart-wrap"><canvas id="tierMrrChart"></canvas></div>
           </div>
         </div>
 
         <div class="grid-2">
           <div class="panel">
-            <div class="panel-head"><h2>MRR movement</h2><p class="panel-sub">Month-over-month change in committed MRR, split into new, expansion, contraction, and churn.</p></div>
+            <div class="panel-head"><h2><abbr title="Monthly Recurring Revenue">MRR</abbr> movement</h2><p class="panel-sub">Month-over-month change in committed <abbr title="Monthly Recurring Revenue">MRR</abbr>, split into new, expansion, contraction, and churn.</p></div>
             <div class="chart-wrap"><canvas id="mrrMovementChart"></canvas></div>
           </div>
           <div class="panel">
@@ -117,7 +117,7 @@
             <div class="chart-wrap"><canvas id="growthChart"></canvas></div>
           </div>
           <div class="panel">
-            <div class="panel-head"><h2>Monthly churn rate</h2><p class="panel-sub">Share of subscribers (logo) and of MRR lost each month, relative to those active at the month's start.</p></div>
+            <div class="panel-head"><h2>Monthly churn rate</h2><p class="panel-sub">Logo churn is the share of subscribers lost each month; revenue churn is the share of <abbr title="Monthly Recurring Revenue">MRR</abbr> lost — both relative to those active at the month's start.</p></div>
             <div class="chart-wrap"><canvas id="churnChart"></canvas></div>
           </div>
         </div>
@@ -134,7 +134,7 @@
         </div>
 
         <div class="panel">
-          <div class="panel-head"><h2>Customer lifetime &amp; LTV</h2><p class="panel-sub">All-time value per customer, and observed lifespan/value of subscribers who have already churned.</p></div>
+          <div class="panel-head"><h2>Customer lifetime &amp; <abbr title="Lifetime Value">LTV</abbr></h2><p class="panel-sub">All-time value per customer, and observed lifespan/value of subscribers who have already churned.</p></div>
           <div id="ltvCards" class="cards"></div>
           <div id="ltvByTier" class="data-list"></div>
         </div>
@@ -187,7 +187,7 @@
             <div id="discountChurnCards" class="cards"></div>
           </div>
           <div class="panel">
-            <div class="panel-head"><h2>Discount ROI <span class="badge">estimate</span></h2><p class="panel-sub">Rough estimate: full price inferred from non-discounted peers (Item Price is unreliable), so treat these as ballpark figures.</p></div>
+            <div class="panel-head"><h2>Discount <abbr title="Return on Investment">ROI</abbr> <span class="badge">estimate</span></h2><p class="panel-sub">Rough estimate: full price inferred from non-discounted peers (Item Price is unreliable), so treat these as ballpark figures.</p></div>
             <div id="discountRoiCards" class="cards"></div>
           </div>
         </div>

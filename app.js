@@ -24,6 +24,19 @@ const fmtDay = (iso) => {
 const escapeHtml = (s) =>
   String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
+// Gumroad wraps the plan name in parentheses, e.g. "(Personal)"; show it without them.
+const stripParens = (s) => s.replace(/^\((.*)\)$/, "$1");
+
+// Acronym tooltips shared with index.html. abbr(key) wraps the acronym in an <abbr>.
+const ABBR = {
+  MRR: "Monthly Recurring Revenue",
+  ARR: "Annual Recurring Revenue",
+  ARPU: "Average Revenue Per User (active subscriber)",
+  LTV: "Lifetime Value",
+  ROI: "Return on Investment",
+};
+const abbr = (key) => `<abbr title="${ABBR[key]}">${key}</abbr>`;
+
 // Add n to the running total stored under key in a Map (0 if absent).
 const bump = (map, key, n) => map.set(key, (map.get(key) || 0) + n);
 
@@ -72,7 +85,7 @@ const NOW = new Date();
 const TODAY = new Date(Date.UTC(NOW.getUTCFullYear(), NOW.getUTCMonth(), NOW.getUTCDate()));
 
 // Item Price ($) is unreliable in real exports (often negative), so plan ranking is hardcoded.
-const TIER_RANK = { "(Personal)": 1, "(Startup)": 2, "(Business)": 3, "(Enterprise)": 4 };
+const TIER_RANK = { "Personal": 1, "Startup": 2, "Business": 3, "Enterprise": 4 };
 
 /* ---------- Core computation ---------- */
 function buildModel(rawRows) {
@@ -87,7 +100,7 @@ function buildModel(rawRows) {
       date: parseDay(r["Purchase Date"]),
       net: (parseFloat(r["Net Total ($)"]) || 0) - (parseFloat(r["Partial Refund ($)"]) || 0),
       recurrence: (r["Recurrence"] || "").trim(),
-      tier: (r["Variants"] || "(Unknown)").trim() || "(Unknown)",
+      tier: stripParens((r["Variants"] || "").trim()) || "Unknown",
       isRecurringCharge: r["Recurring Charge?"] === "1",
       cancellation: parseDay(r["Cancellation Date"]),
       subEnd: parseDay(r["Subscription End Date"]),
@@ -590,7 +603,7 @@ function render(M) {
 
   /* Stat cards */
   document.getElementById("cards").innerHTML = [
-    card("Net MRR", fmtMoney2(M.mrr), `${fmtMoney2(M.arr)} ARR`, true),
+    card(`Net ${abbr("MRR")}`, fmtMoney2(M.mrr), `${fmtMoney2(M.arr)} ${abbr("ARR")}`, true),
     card("Active subscribers", fmtInt(M.activeCount), `${fmtMoney2(M.avgPerSub)} avg / mo`),
     card("Lifetime net revenue", fmtMoney(M.lifetimeNet)),
     card("Total customers", fmtInt(M.totalCustomers), "all time"),
@@ -935,7 +948,7 @@ function render(M) {
     card("Avg lifetime value", fmtMoney2(L.avgChurnedRevenue), "churned customers"),
   ].join("");
   document.getElementById("ltvByTier").innerHTML =
-    "<table class=\"mini-table\"><thead><tr><td>Plan</td><td class=\"num\">Customers</td><td class=\"num\">Avg LTV</td><td class=\"num\">Avg lifespan</td></tr></thead><tbody>" +
+    "<table class=\"mini-table\"><thead><tr><td>Plan</td><td class=\"num\">Customers</td><td class=\"num\">Avg " + abbr("LTV") + "</td><td class=\"num\">Avg lifespan</td></tr></thead><tbody>" +
     L.byTier.map((t) =>
       `<tr><td>${escapeHtml(t.tier)}</td><td class="num">${fmtInt(t.customers)}</td><td class="num">${fmtMoney2(t.avgRevenue)}</td><td class="num">${t.avgLifespanMonths == null ? "–" : t.avgLifespanMonths.toFixed(1) + " mo"}</td></tr>`
     ).join("") +

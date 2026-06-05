@@ -71,7 +71,8 @@ static files, vendors the two libs into `dist/vendor/`, and rewrites the `<scrip
   `Purchase Date`) — excluded by requiring a valid `Purchase Date`.
 - Columns used: `Purchase Email` / `Buyer Email`, `Purchase Date` (YYYY-MM-DD),
   `Net Total ($)` (amount received after fees), `Recurrence` (`monthly`|`yearly`),
-  `Variants` (tier, e.g. `(Business)`), `Recurring Charge?` (`1` for renewals, `0` first),
+  `Variants` (tier, always parenthesized in the export e.g. `(Business)` — `stripParens`
+  removes them so the UI shows `Business`), `Recurring Charge?` (`1` for renewals, `0` first),
   `Cancellation Date`, `Subscription End Date`, `Fully Refunded?`, `Partial Refund ($)`,
   `Disputed?`, `Dispute Won?`, `Sale Price ($)` (per-charge price after discount; `0` for
   100%-off), `Discount Code` (empty when none).
