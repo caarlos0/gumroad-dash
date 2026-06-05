@@ -240,8 +240,10 @@ abbr[title] { text-decoration: underline dotted; text-underline-offset: 3px; cur
   /* section headings start on new page except the first */
   .dash-section + .dash-section { break-before: page; }
 
-  /* charts: give canvas a fixed print height so they render properly */
+  /* charts: snapshot <img> fills the wrap; hide the raw canvas behind it */
   .chart-wrap { height: 240px; }
+  .chart-wrap canvas { display: none; }
+  .chart-print-img { display: block; }
 
   /* strip hover/interactive styles from buttons that are still visible */
   .btn { box-shadow: none; }

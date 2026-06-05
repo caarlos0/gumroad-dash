@@ -1132,14 +1132,21 @@ if (typeof document !== "undefined") {
     });
   }
 
-  /* Resize Chart.js canvases when the browser switches to print layout.
-     matchMedia 'change' fires AFTER print CSS is applied (unlike beforeprint,
-     which fires before), so resize() reads the correct container dimensions. */
-  if (window.matchMedia) {
-    window.matchMedia("print").addEventListener("change", () => {
-      charts.forEach((c) => c.resize());
+  /* Canvas elements are unreliable in print previews across browsers.
+     Snapshot each chart to a static <img> just before printing and remove
+     it afterwards; <img> elements (including data-URLs) print perfectly. */
+  window.addEventListener("beforeprint", () => {
+    charts.forEach((c) => {
+      const img = document.createElement("img");
+      img.className = "chart-print-img";
+      img.src = c.toBase64Image("image/png", 1);
+      img.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;";
+      c.canvas.parentElement.appendChild(img);
     });
-  }
+  });
+  window.addEventListener("afterprint", () => {
+    document.querySelectorAll(".chart-print-img").forEach((img) => img.remove());
+  });
 
   /* Highlight the section currently in view in the sticky nav. */
   const navLinks = [...document.querySelectorAll(".section-nav a")];
