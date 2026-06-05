@@ -33,6 +33,9 @@ borders with offset box-shadows.
   sticky `.section-nav` of anchor links. An `IntersectionObserver` scroll-spy toggles `.active`
   on the matching nav link. Panel element IDs are unchanged, so `render()` is unaffected by the
   grouping — only the surrounding markup moved.
+- **Mobile tables**: `.data-list` horizontally contains any wide `.mini-table` content so tables
+  can't force page-level horizontal scrolling; cells use fixed layout + wrapping, while `.num`
+  cells stay nowrap.
 
 ```
 index.html            # markup: header, dropzone (empty state), dashboard, footer
