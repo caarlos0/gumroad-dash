@@ -39,7 +39,9 @@ borders with offset box-shadows.
 - **Print mode**: `@media print` hides interactive chrome (dropzone/nav/footer/topbar actions),
   keeps `.grid-2` in two columns (so side-by-side panels stay side-by-side), and uses chart
   snapshots (`.chart-print-img`) generated in `beforeprint`/removed in `afterprint` because
-  browser print rendering of live `<canvas>` is unreliable.
+  browser print rendering of live `<canvas>` is unreliable. Live chart canvases are hidden in
+  print with `display: none !important` (Chart.js writes inline canvas styles), and there are no
+  forced section page-breaks so browsers can paginate naturally without trailing blank pages.
 
 ```
 index.html            # markup: header, dropzone (empty state), dashboard, footer

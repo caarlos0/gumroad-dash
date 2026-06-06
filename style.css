@@ -240,12 +240,9 @@ abbr[title] { text-decoration: underline dotted; text-underline-offset: 3px; cur
   /* keep cards from splitting across pages */
   .cards { break-inside: avoid; }
 
-  /* section headings start on new page except the first */
-  .dash-section + .dash-section { break-before: page; }
-
   /* charts: hide raw canvas and print the snapshot image without stretching */
   .chart-wrap { height: auto; }
-  .chart-wrap canvas { display: none; }
+  .chart-wrap canvas { display: none !important; }
   .chart-print-img { display: block; width: 100%; height: auto; }
 
   /* strip hover/interactive styles from buttons that are still visible */
