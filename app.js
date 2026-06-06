@@ -573,6 +573,7 @@ function applyChartTheme() {
     window.matchMedia("(prefers-color-scheme: dark)").matches;
   C.black = dark ? "#ece9e0" : "#000000";
   C.grid = dark ? "rgba(236,233,224,0.12)" : "rgba(0,0,0,0.08)";
+  if (typeof Chart !== "undefined" && Chart.defaults) Chart.defaults.color = C.black;
   gridOpts.grid.color = C.grid;
   gridOpts.ticks.color = C.black;
 }
