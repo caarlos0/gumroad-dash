@@ -575,6 +575,7 @@ function applyChartTheme() {
   C.black = dark ? "#ece9e0" : "#000000";
   C.grid = dark ? "rgba(236,233,224,0.12)" : "rgba(0,0,0,0.08)";
   if (typeof Chart !== "undefined" && Chart.defaults) {
+    // Re-apply defaults on render/theme changes so live OS theme switches update all chart text.
     Chart.defaults.color = labelColor;
     if (Chart.defaults.scale?.ticks) Chart.defaults.scale.ticks.color = labelColor;
     if (Chart.defaults.scale?.title) Chart.defaults.scale.title.color = labelColor;
