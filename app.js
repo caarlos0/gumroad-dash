@@ -563,7 +563,7 @@ let currentFileName = "";
 let lastMetrics = null;
 function destroyCharts() { charts.forEach((c) => c.destroy()); charts = []; }
 
-const baseFont = { family: "ABeeZee, sans-serif", weight: "600" };
+const baseFont = { family: "ABeeZee, sans-serif", weight: 600 };
 const gridOpts = { grid: { color: C.grid }, ticks: { font: baseFont, color: C.black } };
 const stackedScales = () => ({ x: { stacked: true, ...gridOpts }, y: { stacked: true, ...gridOpts } });
 
