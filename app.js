@@ -563,7 +563,7 @@ let currentFileName = "";
 let lastMetrics = null;
 function destroyCharts() { charts.forEach((c) => c.destroy()); charts = []; }
 
-const baseFont = { family: "ABeeZee, sans-serif" };
+const baseFont = { family: "ABeeZee, sans-serif", weight: "600" };
 const gridOpts = { grid: { color: C.grid }, ticks: { font: baseFont, color: C.black } };
 const stackedScales = () => ({ x: { stacked: true, ...gridOpts }, y: { stacked: true, ...gridOpts } });
 
@@ -571,11 +571,17 @@ const stackedScales = () => ({ x: { stacked: true, ...gridOpts }, y: { stacked: 
 function applyChartTheme() {
   const dark = typeof window !== "undefined" && window.matchMedia &&
     window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const labelColor = dark ? "#f5f1e8" : "#1a1a1a";
   C.black = dark ? "#ece9e0" : "#000000";
   C.grid = dark ? "rgba(236,233,224,0.12)" : "rgba(0,0,0,0.08)";
-  if (typeof Chart !== "undefined" && Chart.defaults) Chart.defaults.color = C.black;
+  if (typeof Chart !== "undefined" && Chart.defaults) {
+    Chart.defaults.color = labelColor;
+    if (Chart.defaults.scale?.ticks) Chart.defaults.scale.ticks.color = labelColor;
+    if (Chart.defaults.scale?.title) Chart.defaults.scale.title.color = labelColor;
+    if (Chart.defaults.plugins?.legend?.labels) Chart.defaults.plugins.legend.labels.color = labelColor;
+  }
   gridOpts.grid.color = C.grid;
-  gridOpts.ticks.color = C.black;
+  gridOpts.ticks.color = labelColor;
 }
 
 function card(label, value, sub, accent) {
