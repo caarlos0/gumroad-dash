@@ -27,7 +27,9 @@ borders with offset box-shadows.
   pink accent must stay dark in both themes — use the constant `--ink-on-accent` token, never
   `--black`, for anything on a `--pink` background. Chart colors are set in JS by
   `applyChartTheme()` (reads `matchMedia`), called at the start of `render()`; a `matchMedia`
-  `change` listener re-renders `lastMetrics` so charts retrack live OS theme switches.
+  `change` listener re-renders `lastMetrics` so charts retrack live OS theme switches. Chart
+  typography is explicitly themed in JS too: ticks/legends/titles use 12–13px bold fonts, and
+  tooltips inherit panel/background-aware colors instead of Chart.js defaults.
 - **Dashboard layout**: panels are grouped into five `<section class="dash-section">` blocks
   (`#sec-overview`, `#sec-revenue`, `#sec-retention`, `#sec-customers`, `#sec-discounts`) with a
   sticky `.section-nav` of anchor links. An `IntersectionObserver` scroll-spy toggles `.active`
