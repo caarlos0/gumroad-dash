@@ -575,17 +575,19 @@ const legendLabels = () => ({
   boxWidth: 14,
   boxHeight: 14,
 });
+const axisTitle = (text) => ({ display: true, text, font: titleFont, color: gridOpts.ticks.color });
 
 /* Chart colors follow the OS light/dark preference (mirrors the CSS theme). */
 function applyChartTheme() {
   const dark = typeof window !== "undefined" && window.matchMedia &&
     window.matchMedia("(prefers-color-scheme: dark)").matches;
+  C.black = dark ? "#ece9e0" : "#000000";
   const rootStyles = typeof document !== "undefined"
     ? getComputedStyle(document.documentElement)
     : null;
-  const labelColor = rootStyles?.getPropertyValue("--black").trim() || (dark ? "#ece9e0" : "#000000");
+  const labelColor = rootStyles?.getPropertyValue("--black").trim() || C.black;
   const panelColor = rootStyles?.getPropertyValue("--white").trim() || (dark ? "#232329" : "#ffffff");
-  C.black = dark ? "#ece9e0" : "#000000";
+  C.black = labelColor;
   C.grid = dark ? "rgba(236,233,224,0.12)" : "rgba(0,0,0,0.08)";
   if (typeof Chart !== "undefined" && Chart.defaults) {
     // Re-apply defaults on render/theme changes so live OS theme switches update all chart text.
@@ -886,7 +888,7 @@ function render(M) {
     options: {
       ...chartOpts((v) => `${(+v).toFixed(0)}%`),
       scales: {
-        x: { ...gridOpts, title: { display: true, text: "Months since first charge", font: titleFont, color: C.black } },
+        x: { ...gridOpts, title: axisTitle("Months since first charge") },
         y: { beginAtZero: true, max: 100, ...gridOpts, ticks: { ...gridOpts.ticks, callback: (v) => `${v}%` } },
       },
     },
