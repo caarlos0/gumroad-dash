@@ -27,7 +27,9 @@ borders with offset box-shadows.
   pink accent must stay dark in both themes — use the constant `--ink-on-accent` token, never
   `--black`, for anything on a `--pink` background. Chart colors are set in JS by
   `applyChartTheme()` (reads `matchMedia`), called at the start of `render()`; a `matchMedia`
-  `change` listener re-renders `lastMetrics` so charts retrack live OS theme switches.
+  `change` listener re-renders `lastMetrics` so charts retrack live OS theme switches. Chart
+  typography is explicitly themed in JS too: ticks/legends/titles use 12–13px bold fonts, and
+  tooltips inherit panel/background-aware colors instead of Chart.js defaults.
 - **Dashboard layout**: panels are grouped into five `<section class="dash-section">` blocks
   (`#sec-overview`, `#sec-revenue`, `#sec-retention`, `#sec-customers`, `#sec-discounts`) with a
   sticky `.section-nav` of anchor links. An `IntersectionObserver` scroll-spy toggles `.active`
@@ -36,6 +38,12 @@ borders with offset box-shadows.
 - **Mobile tables**: `.data-list` horizontally contains any wide `.mini-table` content so tables
   can't force page-level horizontal scrolling; cells use fixed layout + wrapping, while `.num`
   cells stay nowrap.
+- **Print mode**: `@media print` hides interactive chrome (dropzone/nav/footer/topbar actions),
+  keeps `.grid-2` in two columns (so side-by-side panels stay side-by-side), and uses chart
+  snapshots (`.chart-print-img`) generated in `beforeprint`/removed in `afterprint` because
+  browser print rendering of live `<canvas>` is unreliable. Live chart canvases are hidden in
+  print with `display: none !important` (Chart.js writes inline canvas styles), and there are no
+  forced section page-breaks so browsers can paginate naturally without trailing blank pages.
 
 ```
 index.html            # markup: header, dropzone (empty state), dashboard, footer

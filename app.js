@@ -563,18 +563,55 @@ let currentFileName = "";
 let lastMetrics = null;
 function destroyCharts() { charts.forEach((c) => c.destroy()); charts = []; }
 
-const baseFont = { family: "ABeeZee, sans-serif" };
-const gridOpts = { grid: { color: C.grid }, ticks: { font: baseFont, color: C.black } };
+const tickFont = { family: "ABeeZee, sans-serif", size: 12, weight: "700" };
+const legendFont = { family: "ABeeZee, sans-serif", size: 12, weight: "700" };
+const titleFont = { family: "ABeeZee, sans-serif", size: 13, weight: "700" };
+const gridOpts = { grid: { color: C.grid }, ticks: { font: tickFont, color: C.black, padding: 6 } };
 const stackedScales = () => ({ x: { stacked: true, ...gridOpts }, y: { stacked: true, ...gridOpts } });
+const legendLabels = () => ({
+  color: C.black,
+  font: legendFont,
+  padding: 14,
+  boxWidth: 14,
+  boxHeight: 14,
+});
+const axisTitle = (text) => ({ display: true, text, font: titleFont, color: gridOpts.ticks.color });
 
 /* Chart colors follow the OS light/dark preference (mirrors the CSS theme). */
 function applyChartTheme() {
   const dark = typeof window !== "undefined" && window.matchMedia &&
     window.matchMedia("(prefers-color-scheme: dark)").matches;
   C.black = dark ? "#ece9e0" : "#000000";
+  const rootStyles = typeof document !== "undefined"
+    ? getComputedStyle(document.documentElement)
+    : null;
+  const labelColor = rootStyles?.getPropertyValue("--black").trim() || C.black;
+  const panelColor = rootStyles?.getPropertyValue("--white").trim() || (dark ? "#232329" : "#ffffff");
+  C.black = labelColor;
   C.grid = dark ? "rgba(236,233,224,0.12)" : "rgba(0,0,0,0.08)";
+  if (typeof Chart !== "undefined" && Chart.defaults) {
+    // Re-apply defaults on render/theme changes so live OS theme switches update all chart text.
+    Chart.defaults.color = labelColor;
+    Object.assign(Chart.defaults.font, tickFont);
+    if (Chart.defaults.scale?.ticks) Object.assign(Chart.defaults.scale.ticks, { color: labelColor, font: tickFont, padding: 6 });
+    if (Chart.defaults.scale?.title) Object.assign(Chart.defaults.scale.title, { color: labelColor, font: titleFont });
+    if (Chart.defaults.plugins?.legend?.labels) Object.assign(Chart.defaults.plugins.legend.labels, legendLabels());
+    if (Chart.defaults.plugins?.tooltip) {
+      Object.assign(Chart.defaults.plugins.tooltip, {
+        backgroundColor: panelColor,
+        titleColor: labelColor,
+        bodyColor: labelColor,
+        borderColor: labelColor,
+        borderWidth: 1,
+        titleFont,
+        bodyFont: tickFont,
+        padding: 10,
+      });
+    }
+  }
   gridOpts.grid.color = C.grid;
-  gridOpts.ticks.color = C.black;
+  gridOpts.ticks.color = labelColor;
+  gridOpts.ticks.font = tickFont;
 }
 
 function card(label, value, sub, accent) {
@@ -727,7 +764,7 @@ function render(M) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { position: "right", labels: { font: baseFont, color: C.black } } },
+      plugins: { legend: { position: "right", labels: legendLabels() } },
     },
   }));
 
@@ -851,7 +888,7 @@ function render(M) {
     options: {
       ...chartOpts((v) => `${(+v).toFixed(0)}%`),
       scales: {
-        x: { ...gridOpts, title: { display: true, text: "Months since first charge", font: baseFont, color: C.black } },
+        x: { ...gridOpts, title: axisTitle("Months since first charge") },
         y: { beginAtZero: true, max: 100, ...gridOpts, ticks: { ...gridOpts.ticks, callback: (v) => `${v}%` } },
       },
     },
@@ -892,7 +929,7 @@ function render(M) {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { position: "right", labels: { font: baseFont, color: C.black } },
+        legend: { position: "right", labels: legendLabels() },
         tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${fmtMoney2(ctx.parsed)}` } },
       },
     },
@@ -1024,7 +1061,7 @@ function render(M) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { position: "right", labels: { font: baseFont, color: C.black } } },
+      plugins: { legend: { position: "right", labels: legendLabels() } },
     },
   }));
 
@@ -1052,7 +1089,7 @@ function chartOpts(fmt) {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { labels: { font: baseFont, color: C.black } },
+      legend: { labels: legendLabels() },
       tooltip: {
         callbacks: { label: (ctx) => `${ctx.dataset.label}: ${fmt(ctx.parsed.y ?? ctx.parsed)}` },
       },
@@ -1131,6 +1168,23 @@ if (typeof document !== "undefined") {
       if (lastMetrics) render(lastMetrics);
     });
   }
+
+  /* Canvas elements are unreliable in print previews across browsers.
+     Snapshot each chart to a static <img> just before printing and remove
+     it afterwards; <img> elements (including data-URLs) print perfectly. */
+  window.addEventListener("beforeprint", () => {
+    document.querySelectorAll(".chart-print-img").forEach((img) => img.remove());
+    charts.forEach((c) => {
+      const img = document.createElement("img");
+      img.className = "chart-print-img";
+      img.src = c.toBase64Image("image/png", 1);
+      img.style.cssText = "width:100%;height:auto;";
+      c.canvas.parentElement.appendChild(img);
+    });
+  });
+  window.addEventListener("afterprint", () => {
+    document.querySelectorAll(".chart-print-img").forEach((img) => img.remove());
+  });
 
   /* Highlight the section currently in view in the sticky nav. */
   const navLinks = [...document.querySelectorAll(".section-nav a")];

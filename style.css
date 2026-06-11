@@ -185,6 +185,9 @@ abbr[title] { text-decoration: underline dotted; text-underline-offset: 3px; cur
 .cards-forecast { margin-top: 4px; }
 .stale-note { color: var(--red); margin-top: 8px; font-weight: 500; }
 
+/* chart snapshot images: only visible during printing */
+.chart-print-img { display: none; }
+
 /* Footer */
 .footer { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; padding: 24px; font-size: 13px; opacity: 0.6; border-top: var(--border); background: var(--white); }
 .footer a { color: var(--black); font-weight: 500; text-decoration: underline; text-decoration-color: var(--pink); text-underline-offset: 2px; }
@@ -192,3 +195,56 @@ abbr[title] { text-decoration: underline dotted; text-underline-offset: 3px; cur
 .footer-sep { opacity: 0.5; }
 .footer-repo { display: inline-flex; align-items: center; gap: 5px; }
 .footer-repo svg { width: 15px; height: 15px; fill: var(--black); }
+
+/* Print */
+@media print {
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  /* force light-theme values regardless of OS setting so paper is always white */
+  :root {
+    --black: #000000;
+    --cream: #ffffff;
+    --white: #ffffff;
+    --shadow: none;
+    --shadow-sm: none;
+  }
+
+  /* hide interactive / nav chrome */
+  .topbar-actions,
+  .section-nav,
+  .dropzone,
+  .footer { display: none !important; }
+
+  /* flatten topbar to a simple title row */
+  .topbar {
+    position: static;
+    border-bottom: 2px solid var(--black);
+    box-shadow: none;
+    background: var(--white);
+  }
+
+  body, html { background: var(--cream); color: var(--black); }
+
+  .container { max-width: 100%; padding: 16px; }
+
+  /* keep side-by-side panels side-by-side in print too */
+  .grid-2 { grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  /* remove offscreen shadows and reduce ink */
+  .card, .panel {
+    box-shadow: none;
+    border: 1px solid var(--black);
+    break-inside: avoid;
+  }
+
+  /* keep cards from splitting across pages */
+  .cards { break-inside: avoid; }
+
+  /* charts: hide raw canvas and print the snapshot image without stretching */
+  .chart-wrap { height: auto; }
+  .chart-wrap canvas { display: none !important; }
+  .chart-print-img { display: block; width: 100%; height: auto; }
+
+  /* strip hover/interactive styles from buttons that are still visible */
+  .btn { box-shadow: none; }
+}
